@@ -99,7 +99,10 @@ export const handler: Handler = async (
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify`;
     const response = await fetch(verifyUrl, {
       method: 'POST',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+      },
       body: `secret=${recaptchaSecretKey}&response=${token}`,
     });
 

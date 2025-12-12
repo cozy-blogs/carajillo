@@ -8,3 +8,4 @@
 [functions]
   included_files = ["src/**/*.ts"]
 
+  node_bundler = "esbuild"
