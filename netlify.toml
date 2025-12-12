@@ -1,11 +1,12 @@
 [build]
   command = "npm run build"
+  publish = "dist"
   functions = "netlify/functions"
 
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
+# https://docs.netlify.com/build/configure-builds/file-based-configuration/#functions
 [functions]
   included_files = ["src/**/*.ts"]
-
   node_bundler = "esbuild"

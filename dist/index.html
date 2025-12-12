@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <form action="/.netlify/functions/validate-recaptcha" method="post">
+      <input type="text" name="name" placeholder="Name">
+      <input type="email" name="email" placeholder="Email">
+      <input type="submit" value="Submit">
+      <input type="hidden" name="recaptcha_token" id="recaptcha_token">
+      <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+      <script>
+        function onSubmit(token) {
+          document.getElementById("recaptcha_token").value = token;
+        }
+      </script>
+    </form>
+  </body>
+</html>

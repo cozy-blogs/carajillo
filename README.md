@@ -235,12 +235,12 @@ Common reCAPTCHA error codes:
 .
 ├── src/
 │   └── validate-recaptcha.ts    # Serverless function source
-├── netlify/
-│   └── functions/                # Compiled functions (generated)
-├── netlify.toml                  # Netlify configuration
-├── package.json                  # Dependencies
-├── tsconfig.json                 # TypeScript configuration
-└── README.md                     # This file
+├── dist/                        # Publish directory
+│── netlify/functions/           # Compiled functions (generated)
+├── netlify.toml                 # Netlify configuration
+├── package.json                 # Dependencies
+├── tsconfig.json                # TypeScript configuration
+└── README.md                    # This file
 ```
 
 ## License
