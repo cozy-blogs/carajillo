@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { netlify } from './netlify';
 import { HttpError } from './http';
 
 interface RecaptchaResponse {
@@ -12,6 +13,16 @@ interface RecaptchaResponse {
 
 const SITE_KEY = process.env.RECAPTCHA_SITE_KEY;
 const SECRET = process.env.RECAPTCHA_SECRET;
+
+export const handler = netlify({GET: getSiteKey});
+
+async function getSiteKey() {
+  if (!SITE_KEY) {
+    console.error('RECAPTCHA_SITE_KEY environment variable is not set');
+    throw new Error('Server configuration error');
+  }
+  return {success: true, recaptcha_site_key: SITE_KEY};
+}
 
 /**
  * Perform the backend site of reCAPTCHA token verification.
@@ -44,7 +55,7 @@ export async function verifyToken(token: string): Promise<RecaptchaResponse> {
   if (data.success) {
     return data;
   } else {
-    console.error(`reCAPTCHA error: ${data}`);
+    console.error(`reCAPTCHA error: ${JSON.stringify(data)}`);
     throw new HttpError(400, "reCAPTCHA validatation failed");
   }
 }

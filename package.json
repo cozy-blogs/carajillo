@@ -1,18 +1,17 @@
 {
-  "name": "netlify-recaptcha-validator",
+  "name": "mailer",
   "version": "1.0.0",
   "description": "Netlify serverless function for reCAPTCHA validation",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "netlify dev",
+    "dev": "netlify dev -c 'tsc --watch'",
     "type-check": "tsc --noEmit"
   },
   "keywords": [
     "netlify",
     "serverless",
-    "recaptcha",
-    "typescript"
+    "recaptcha"
   ],
   "author": "",
   "license": "MIT",

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="subscribe.mjs" type="module" async defer></script>
   </head>
   <body>
@@ -9,7 +8,7 @@
       <input type="text" name="name" placeholder="Name">
       <input type="email" name="email" placeholder="Email">
       <input type="submit" value="Submit">
-      <input type="hidden" name="recaptcha_token" id="recaptcha_token">
+      <input type="text" name="address" style="display:none">
       <div class="subscribe-status"></div>
     </form>
   </body>

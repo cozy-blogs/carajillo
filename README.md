@@ -1,9 +1,10 @@
-# Netlify mailer
+# Mailer
 
-A TypeScript serverless function for newsletter subscription management.
+Newsletter subscription management for loops.so
 
 ## Features
 
+- ✅ Deployable as netlify functions
 - ✅ reCAPTCHA v2/v3 validation
 - ✅ Double opt-in mailing
 - ✅ CORS enabled
@@ -17,23 +18,40 @@ A TypeScript serverless function for newsletter subscription management.
 npm install
 ```
 
-### 2. Configure reCAPTCHA Secret Key
+### 2. Configure
 
 Set your reCAPTCHA secret key as an environment variable in Netlify:
 
 **Via Netlify Dashboard:**
 1. Go to your site's settings
 2. Navigate to "Environment variables"
-3. Add `RECAPTCHA_SECRET` with your secret key value
+3. Add variables:
+ - `JWT_SECRET`
+ - `RECAPTCHA_SITE_KEY`
+ - `RECAPTCHA_SECRET`
+ - `LOOPS_SECRET`
 
 **Via Netlify CLI:**
 ```bash
+netlify env:set JWT_SECRET $(dd count=1 ibs=32 if=/dev/random status=none | base64)
+netlify env:set CAPTCHA_PROVIDER recaptcha
+# https://console.cloud.google.com/security/recaptcha/
+netlify env:set RECAPTCHA_SITE_KEY "your-site-key"
 netlify env:set RECAPTCHA_SECRET "your-secret-key-here"
+# https://app.loops.so/settings?page=api
+netlify env:set LOOPS_SECRET "your-secret-key-here"
+
 ```
 
 **For Local Development:**
 Create a `.env` file in the root directory:
 ```
+JWT_SECRET=
+
+CAPTCHA_PROVIDER=recaptcha|hcaptcha|none
+CAPTCHA_THRESHOLD=0.5
+
+RECAPTCHA_SITE_KEY=
 RECAPTCHA_SECRET=your-secret-key-here
 ```
 
@@ -114,7 +132,12 @@ sequenceDiagram
   participant reCAPTCHAv3
   participant mailer
   participant Loops
-  participant MailServer 
+  participant MailServer
+
+  UserAgent -->>+ mailer: Get reCAPTCHA site key
+  mailer -->>- UserAgent: reCAPTCHA site key
+  UserAgent ->> reCAPTCHAv3: get reCAPTCHA script
+  note over start user/bot verification in background
 
   UserAgent -->>+ User: Show subscripton form
 

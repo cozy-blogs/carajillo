@@ -1,46 +1,66 @@
-import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
+import { Handler as NetlifyHandler, HandlerEvent as NetlifyEvent, HandlerContext as NetlifyContext } from '@netlify/functions';
 import { HttpError } from './http';
 
-interface JsonApiEntrypoint {
+/**
+ * Primary HTTP methods (verbs) for Json API defintions.
+ * 
+ * CRUD: Create (PUT), Read (GET), Update (PUT) and Delete.
+ */
+type CrudMethod = 'PUT' | 'GET' | 'POST' | 'DELETE';
+
+interface MethodHandler {
   (request: any): Promise<any>;
 }
+type JsonApiEntrypoint = {
+  [method in CrudMethod]?: MethodHandler;
+};
 
-export function netlify(entrypoint: JsonApiEntrypoint): Handler {
+type JsonObject = {
+  [name: string]: any;
+}
+
+export function netlify(entrypoint: JsonApiEntrypoint): NetlifyHandler {
+  const methods = Object.keys(entrypoint) as CrudMethod[];
+
   const headers = {
+    // API
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'Allow': 'POST, OPTIONS',
+    'Allow': [...methods, 'OPTIONS'].join(', '),
+    // Allow cross origin requests
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Accept, Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': [...methods, 'OPTIONS'].join(', '),
+    // do not cache responses
     'Cache-Control': 'no-store',
+    // Security headers
     //'Strict-Transport-Security': 'max-age=31536000',
     'X-Content-Type-Options': 'nosniff',
   };
 
   return async (
-    event: HandlerEvent,
-    context: HandlerContext
+    event: NetlifyEvent,
+    context: NetlifyContext
   ) => {
+    console.log(`${event.httpMethod} ${event.rawUrl}`);
+    if (event.headers.Origin)
+      console.log(`Request Origin: ${event.headers.Origin}`);
+
     // Handle CORS preflight
     if (event.httpMethod === 'OPTIONS') {
       return {statusCode: 200, headers, body: JSON.stringify({})};
     }
 
-    // Only allow POST requests
-    if (event.httpMethod !== 'POST') {
-      throw new HttpError(405, "Only POST reqeusts are allowed");
+    if (!(event.httpMethod in entrypoint)) {
+      throw new HttpError(405, `Only ${methods.join(', ')} reqeusts are allowed`);
     }
+    const verb = event.httpMethod as CrudMethod;
 
     try {
-      let body: any;
-      try {
-        body = JSON.parse(event.body || '{}');
-      } catch (error) {
-        throw new HttpError(400, "Invalid JSON");
-      }
-
-      const response = await entrypoint(body);
+      let parameters = eventParameters(event);
+      const operation = entrypoint[verb] as MethodHandler;
+      const response = await operation(parameters);
 
       return {
         statusCode: 200,
@@ -60,3 +80,20 @@ export function netlify(entrypoint: JsonApiEntrypoint): Handler {
     }
   };
 } 
+
+function eventParameters(event: NetlifyEvent): JsonObject {
+  switch (event.httpMethod) {
+    case 'GET':
+      return event.queryStringParameters || {};
+    case 'POST':
+    case 'PUT':
+    case 'DELETE':
+      try {
+        return JSON.parse(event.body || '{}');
+      } catch (error) {
+        throw new HttpError(400, 'Invalid JSON');
+      }
+    default:
+      throw new HttpError(405, 'Method not allowed');
+  }
+}
