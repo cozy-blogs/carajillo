@@ -5,14 +5,11 @@ yarn.lock
 
 # Build outputs
 netlify/
-dist/*
+dist/
 *.js
 *.js.map
 *.d.ts
 *.d.ts.map
-
-# include index.html
-!dist/index.html
 
 # Environment variables
 .env
