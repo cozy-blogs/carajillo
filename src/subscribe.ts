@@ -1,8 +1,7 @@
 import { HttpError } from './http';
 import { netlify } from './netlify';
-import { verifyToken } from './recaptcha';
+import { validate as recaptchaValidate } from './recaptcha';
 
-const CAPTCHA_THRESHOLD = 0.5;
 
 interface SubscribeRequest {
   email : string;
@@ -15,20 +14,28 @@ async function subscribe(request: SubscribeRequest) {
   if (typeof request.captcha_token !== "string")
     throw new HttpError(400, "Missing CAPTCHA token");
 
-  const captcha = await verifyToken(request.captcha_token);
-  console.log(`CAPTCHA: score=${captcha.score} action=${captcha.action} challenge_ts=${captcha.challenge_ts} hostname=${captcha.hostname}`);
-  if (captcha['error-codes']) {
-    console.error(`CAPTCHA error codes: ${captcha['error-codes']?.join(', ')}`);
-  }
-
-  if(captcha.action !== "subscribe")
-    throw new HttpError(400, "CAPTCHA error");
-
-  if(captcha.score < CAPTCHA_THRESHOLD) {
-    console.warn(`CAPTCHA score below threshold ${captcha.score}`);
+  const valid = captcha('subscribe', request.captcha_token);
+  if (!valid) {
+    throw new HttpError(429, 'Try again later');
   }
 
   return {success: true, req: request};
+}
+
+interface CaptchaProvider {
+  (action: string, token: string): Promise<boolean>;
+}
+const captcha = getCaptchaProvider(process.env.CAPTCHA_PROVIDER || 'recaptcha');
+
+function getCaptchaProvider(provider: string): CaptchaProvider {
+  switch (provider) {
+    case 'recaptcha':
+      return recaptchaValidate;
+    case 'none':
+      return async (action: string, token: string) => { return true; };
+    default:
+      throw new Error(`unsupported CAPTCHA provider: ${provider}`);
+  }
 }
 
 export const handler = netlify({POST: subscribe});

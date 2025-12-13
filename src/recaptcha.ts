@@ -13,6 +13,7 @@ interface RecaptchaResponse {
 
 const SITE_KEY = process.env.RECAPTCHA_SITE_KEY;
 const SECRET = process.env.RECAPTCHA_SECRET;
+const THRESHOLD = Number.parseFloat(process.env.CAPTCHA_THRESHOLD || '0.5');
 
 export const handler = netlify({GET: getSiteKey});
 
@@ -27,8 +28,36 @@ async function getSiteKey() {
 /**
  * Perform the backend site of reCAPTCHA token verification.
  * https://developers.google.com/recaptcha/docs/v3#site_verify_response
+ * @param action String representing action guarded by CAPTCHA
+ * @param token  CAPTCHA token preseneted by User Agent
+ * @returns true if user passed the test (score >= CAPTCHA_THRESHOLD)
+ */
+export async function validate(action: string, token: string): Promise<boolean> {
+  const captcha = await verifyToken(token);
+  console.log(`CAPTCHA: score=${captcha.score} action=${captcha.action} challenge_ts=${captcha.challenge_ts} hostname=${captcha.hostname}`);
+
+  if (captcha['error-codes']) {
+    console.error(`CAPTCHA error codes: ${captcha['error-codes']?.join(', ')}`);
+    throw new HttpError(400, `CAPTCHA error: ${captcha['error-codes']?.join(', ')}`);
+  }
+
+  if(captcha.action !== action) {
+    console.error(`CAPTION action does not match: expected=${action} actual=${captcha.action}`);
+    throw new HttpError(400, "CAPTCHA error: action-mismatch");
+  }
+
+  if(captcha.score < THRESHOLD) {
+    console.warn(`CAPTCHA score below threshold ${captcha.score}`);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Calls reCAPTCHA REST API for token site verification.
  * @param token  reCAPTCHA token
- * @return score in range from 0 (bot) to 1 (human)
+ * @return reCAPTCHA REST API resoponse
  */
 export async function verifyToken(token: string): Promise<RecaptchaResponse> {
   if (!SECRET) {
