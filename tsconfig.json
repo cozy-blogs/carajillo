@@ -5,7 +5,7 @@
     "lib": ["ES2020"],
     "types": ["node"],
     "outDir": "./netlify/functions",
-    "rootDir": "./src",
+    "rootDir": "./backend",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -16,7 +16,7 @@
     "declarationMap": false,
     "sourceMap": false
   },
-  "include": ["src/**/*"],
+  "include": ["backend/**/*"],
   "exclude": ["node_modules", "dist"]
 }
 
