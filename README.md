@@ -1,13 +1,12 @@
-# Netlify reCAPTCHA Validator
+# Netlify mailer
 
-A TypeScript serverless function for validating reCAPTCHA tokens on Netlify.
+A TypeScript serverless function for newsletter subscription management.
 
 ## Features
 
-- ✅ TypeScript support
-- ✅ Serverless function for reCAPTCHA v2/v3 validation
+- ✅ reCAPTCHA v2/v3 validation
+- ✅ Double opt-in mailing
 - ✅ CORS enabled
-- ✅ Error handling
 - ✅ Environment variable configuration
 
 ## Setup
@@ -25,17 +24,17 @@ Set your reCAPTCHA secret key as an environment variable in Netlify:
 **Via Netlify Dashboard:**
 1. Go to your site's settings
 2. Navigate to "Environment variables"
-3. Add `RECAPTCHA_SECRET_KEY` with your secret key value
+3. Add `RECAPTCHA_SECRET` with your secret key value
 
 **Via Netlify CLI:**
 ```bash
-netlify env:set RECAPTCHA_SECRET_KEY "your-secret-key-here"
+netlify env:set RECAPTCHA_SECRET "your-secret-key-here"
 ```
 
 **For Local Development:**
 Create a `.env` file in the root directory:
 ```
-RECAPTCHA_SECRET_KEY=your-secret-key-here
+RECAPTCHA_SECRET=your-secret-key-here
 ```
 
 ### 3. Build
@@ -63,13 +62,13 @@ Run the Netlify development server:
 npm run dev
 ```
 
-The function will be available at: `http://localhost:8888/.netlify/functions/validate-recaptcha`
+Sample subscription form will be available at: `http://localhost:8888/`
 
 ## Usage
 
 ### Endpoint
 
-`POST /.netlify/functions/validate-recaptcha`
+`POST /.netlify/functions/subscribe`
 
 ### Request Body
 
@@ -98,36 +97,6 @@ The function will be available at: `http://localhost:8888/.netlify/functions/val
   "error": "reCAPTCHA validation failed",
   "error-codes": ["invalid-input-response"]
 }
-```
-
-### Example Client-Side Usage
-
-```javascript
-// Get the reCAPTCHA token from the client
-grecaptcha.ready(function() {
-  grecaptcha.execute('YOUR_SITE_KEY', {action: 'submit'}).then(function(token) {
-    // Send token to your Netlify function
-    fetch('/.netlify/functions/validate-recaptcha', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token: token })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        console.log('reCAPTCHA validated successfully!');
-        // Proceed with form submission
-      } else {
-        console.error('reCAPTCHA validation failed:', data['error-codes']);
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-    });
-  });
-});
 ```
 
 ### Architecture
@@ -233,8 +202,7 @@ Common reCAPTCHA error codes:
 
 ```
 .
-├── src/
-│   └── validate-recaptcha.ts    # Serverless function source
+├── src/                         # Serverless backend source code
 ├── dist/                        # Publish directory
 │── netlify/functions/           # Compiled functions (generated)
 ├── netlify.toml                 # Netlify configuration
@@ -242,8 +210,3 @@ Common reCAPTCHA error codes:
 ├── tsconfig.json                # TypeScript configuration
 └── README.md                    # This file
 ```
-
-## License
-
-MIT
-
