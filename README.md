@@ -239,8 +239,9 @@ Common reCAPTCHA error codes:
 ```
 .
 ├── backend/                     # Serverless backend source code
-├── frontend/                    # Publish directory
-│── netlify/functions/           # Compiled functions (generated)
+├── frontend/                    # Frontend source code
+│   └── dist/                    # Publish direcotry (generated)
+│── netlify/functions/           # Netlify functions
 ├── netlify.toml                 # Netlify configuration
 ├── package.json                 # Dependencies
 ├── tsconfig.json                # TypeScript configuration

@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Newsletter subscription management for loops.so",
   "scripts": {
-    "build": "node -r dotenv/config expose-site-key.js",
-    "dev": "node -r dotenv/config expose-site-key.js && netlify dev",
-    "type-check": "tsc --noEmit"
+    "build": "mkdir -p frontend/dist && node -r dotenv/config frontend/expose-site-key.js && cp frontend/index.html frontend/404.html frontend/mailer.js frontend/dist/",
+    "dev": "npm run build && netlify dev",
+    "check": "tsc --noEmit"
   },
   "keywords": [
     "netlify",

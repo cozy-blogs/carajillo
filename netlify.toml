@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "frontend"
+  publish = "frontend/dist"
 
 # https://docs.netlify.com/build/configure-builds/file-based-configuration/#functions
 [functions]

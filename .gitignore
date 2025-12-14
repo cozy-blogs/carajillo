@@ -4,11 +4,10 @@ package-lock.json
 yarn.lock
 
 # Build outputs
-dist/
 *.js.map
 *.d.ts
 *.d.ts.map
-frontend/api/
+frontend/dist/
 
 # Environment variables
 .env

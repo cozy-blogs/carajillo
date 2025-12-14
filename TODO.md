@@ -6,3 +6,4 @@
 * [x] minimize function call - captcha site key file should be generated at build time
 * [ ] json schema for request validation
 * [ ] use https://www.netlify.com/blog/introducing-netlify-functions-2-0/
+* [ ] webpack for frontend
