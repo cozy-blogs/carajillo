@@ -4,12 +4,143 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <!-- todo fonts -->
+    <style>
+      :root {
+        /* Reference colors */
+        --brand-color: #264cb2;
+        --white: #fff;
+        --light-gray: #f0f0f0;
+        --light-blue: #f3f7ff;
+        --blue-gray: #677387;
+        --gray: #9e9e9e;
+        --dark: #181818;
+        --dark-blue: #122c65;
+
+        /* Acasta light color theme */
+        --background-color: var(--white);
+        --background-alt-color: var(--light-blue);
+        --shadow-color: var(--light-gray);
+
+        --text-color: var(--dark-blue);
+        --text-alt-color: var(--blue-gray);
+
+        --heading-font-color: var(--dark-blue);
+
+        --link-color: var(--dark-blue);
+        --link-color-hover: var(--dark-blue);
+
+        --button-color: var(--white);
+        --button-color-hover: var(--white);
+        --button-background-color: var(--dark);
+        --button-background-hover: var(--brand-color);
+
+        --border-color: var(--light-blue);
+        --border-color-alt: var(--light-blue);
+
+        --md-ref-typeface-brand: 'Noto Serif';
+        --md-ref-typeface-plain: 'Noto Sans';
+        --md-sys-color-primary: rgb(76 92 146);
+        --md-sys-color-surface-tint: rgb(76 92 146);
+        --md-sys-color-on-primary: rgb(255 255 255);
+        --md-sys-color-primary-container: rgb(220 225 255);
+        --md-sys-color-on-primary-container: rgb(52 68 121);
+        --md-sys-color-secondary: rgb(73 93 146);
+        --md-sys-color-on-secondary: rgb(255 255 255);
+        --md-sys-color-secondary-container: rgb(218 226 255);
+        --md-sys-color-on-secondary-container: rgb(49 69 120);
+        --md-sys-color-tertiary: rgb(73 93 146);
+        --md-sys-color-on-tertiary: rgb(255 255 255);
+        --md-sys-color-tertiary-container: rgb(218 226 255);
+        --md-sys-color-on-tertiary-container: rgb(49 69 120);
+        --md-sys-color-error: rgb(186 26 26);
+        --md-sys-color-on-error: rgb(255 255 255);
+        --md-sys-color-error-container: rgb(255 218 214);
+        --md-sys-color-on-error-container: rgb(147 0 10);
+        --md-sys-color-background: rgb(250 248 255);
+        --md-sys-color-on-background: rgb(26 27 33);
+        --md-sys-color-surface: rgb(250 248 255);
+        --md-sys-color-on-surface: rgb(26 27 33);
+        --md-sys-color-surface-variant: rgb(226 225 236);
+        --md-sys-color-on-surface-variant: rgb(69 70 79);
+        --md-sys-color-outline: rgb(118 118 128);
+        --md-sys-color-outline-variant: rgb(198 198 208);
+        --md-sys-color-shadow: rgb(0 0 0);
+        --md-sys-color-scrim: rgb(0 0 0);
+        --md-sys-color-inverse-surface: rgb(47 48 54);
+        --md-sys-color-inverse-on-surface: rgb(241 240 247);
+        --md-sys-color-inverse-primary: rgb(181 196 255);
+        --md-sys-color-primary-fixed: rgb(220 225 255);
+        --md-sys-color-on-primary-fixed: rgb(2 23 75);
+        --md-sys-color-primary-fixed-dim: rgb(181 196 255);
+        --md-sys-color-on-primary-fixed-variant: rgb(52 68 121);
+        --md-sys-color-secondary-fixed: rgb(218 226 255);
+        --md-sys-color-on-secondary-fixed: rgb(0 24 73);
+        --md-sys-color-secondary-fixed-dim: rgb(178 197 255);
+        --md-sys-color-on-secondary-fixed-variant: rgb(49 69 120);
+        --md-sys-color-tertiary-fixed: rgb(218 226 255);
+        --md-sys-color-on-tertiary-fixed: rgb(0 24 73);
+        --md-sys-color-tertiary-fixed-dim: rgb(178 197 255);
+        --md-sys-color-on-tertiary-fixed-variant: rgb(49 69 120);
+        --md-sys-color-surface-dim: rgb(218 217 224);
+        --md-sys-color-surface-bright: rgb(250 248 255);
+        --md-sys-color-surface-container-lowest: rgb(255 255 255);
+        --md-sys-color-surface-container-low: rgb(244 243 250);
+        --md-sys-color-surface-container: rgb(238 237 244);
+        --md-sys-color-surface-container-high: rgb(233 231 239);
+        --md-sys-color-surface-container-highest: rgb(227 225 233);
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
   </head>
   <body>
-    <mailing-list-subscription
+    <!-- <mailer-list-subscription
       mailingListId="travel"
       name="Off the beaten track"
       description="Travel tips & tricks"
-      ></mailing-list-subscription>
+      ></mailer-list-subscription> -->
+
+    <div style="width:20rem; border: 1px solid #ddd; border-radius:20px; padding: 20px">
+      <md-list>
+        <md-list-item type="button">
+          <div slot="headline">Newsletter</div>
+          <div slot="supporting-text">subscribe for newsletter</div>
+          <div slot="trailing-supporting-text">
+            <md-switch icons selected></md-switch>
+          </div>
+        </md-list-item>
+        <md-list-item type="button">
+          <md-icon slot="start">label</md-icon>
+          <div slot="headline">Off the beaten track</div>
+          <div slot="supporting-text">Travel tips & tricks</div>
+          <div slot="trailing-supporting-text">
+            <md-switch icons selected></md-switch>
+          </div>
+        </md-list-item>
+        <md-list-item type="button">
+          <md-icon slot="start">label</md-icon>
+          <div slot="headline">Mentoring</div>
+          <div slot="supporting-text">...</div>
+          <div slot="end">
+            <md-switch icons selected></md-switch>
+          </div>
+        </md-list-item>
+        <md-list-item type="button">
+          <md-icon slot="start">label</md-icon>
+          <div slot="headline">Home renovation</div>
+          <div slot="supporting-text">the good, the bad and the ugly</div>
+          <div slot="end">
+            <md-switch icons selected></md-switch>
+          </div>
+        </md-list-item>
+      </md-list>
+      <md-linear-progress indeterminate></md-linear-progress>
+    </div>
   </body>
 </html>

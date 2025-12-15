@@ -8,3 +8,4 @@
 * [ ] use https://www.netlify.com/blog/introducing-netlify-functions-2-0/
 * [x] webpack for frontend
 * [x] typescript for frontend
+* [ ] https://lit.dev/docs/tools/production/#modern-only-build ?

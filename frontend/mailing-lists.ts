@@ -3,9 +3,11 @@ import {LitElement, html, css} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 import {repeat} from 'lit/directives/repeat.js';
 
+// https://material-web.dev/components/list/
+// https://material-web.dev/components/switch/
 
-@customElement('mailing-list-subscription')
-export class MailingListSubscription extends LitElement {
+@customElement('mailier-list-subscription')
+export class ListSubscription extends LitElement {
 
   static properties = {
     mailingListId: { type: String },
