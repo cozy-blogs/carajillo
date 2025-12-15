@@ -4,7 +4,7 @@
   "description": "Newsletter subscription management for loops.so",
   "scripts": {
     "build": "webpack",
-    "dev": "netlify dev -c 'webpack serve'",
+    "dev": "netlify dev -c 'webpack --watch'",
     "check": "tsc --noEmit"
   },
   "keywords": [
