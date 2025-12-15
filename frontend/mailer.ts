@@ -66,10 +66,14 @@ function loadCaptcha(siteKey: string) {
   });
 }
 
-function getCaptchaToken(action: string) {
-  return new Promise((resolve) => {
+function getCaptchaToken(action: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!recaptchaSiteKey) {
+      reject(new Error("reCAPTCHA site key not loaded"));
+      return;
+    }
     grecaptcha.ready(() => {
-      grecaptcha.execute(recaptchaSiteKey, {action}).then(resolve);
+      grecaptcha.execute(recaptchaSiteKey!, {action}).then(resolve, reject);
     });
   });
 }
@@ -85,7 +89,7 @@ function loopsSubscribeForm(form: HTMLFormElement) {
 
 
     const {success, message, email} = await loopsSubscribe(form);
-    if (success) {
+    if (success && email) {
       form.dataset.status = "successful";
       if (status) {
         const confirmationLink = document.createElement("a");
@@ -103,12 +107,19 @@ function loopsSubscribeForm(form: HTMLFormElement) {
   });
 }
 
-function formDataObject(form: HTMLFormElement) {
-  return Object.fromEntries(new FormData(form).entries());
+function formDataObject(form: HTMLFormElement): Record<string, string> {
+  const formData = new FormData(form);
+  const entries: [string, string][] = [];
+  formData.forEach((value, key) => {
+    if (typeof value === 'string') {
+      entries.push([key, value]);
+    }
+  });
+  return Object.fromEntries(entries);
 }
 
 // https://loops.so/docs/forms/custom-form
-async function loopsSubscribe(form: HTMLFormElement) {
+async function loopsSubscribe(form: HTMLFormElement): Promise<{success: boolean; message: string; email?: string}> {
   const messages = {
     success: form.dataset.i18nSuccess || "Subscription successful. Check your email for confirmation.",
     tryLater: form.dataset.i18nTryLater || "Too many signups, please try again in a little while.",
@@ -134,16 +145,17 @@ async function loopsSubscribe(form: HTMLFormElement) {
     }
     const result = await response.json();
     if (result.success) {
-      return {success: true, message: `📨 ${messages.success}`, email: data.email};
+      return {success: true, message: `📨 ${messages.success}`, email: data.email as string};
     } else {
       return {success: false, message: `❌ ${messages.failed.replace("{message}", result.error)}`};
     }
   } catch(error) {
-    return {success: false, message: `❌ ${messages.failed.replace("{message}", error.message)}`};
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {success: false, message: `❌ ${messages.failed.replace("{message}", errorMessage)}`};
   }
 }
 
-function confirmLink(email) {
+function confirmLink(email: string): string {
   const domain = email.replace(/.*@/, "");
   return `https://${domain}/`;
 }
