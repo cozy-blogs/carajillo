@@ -7,4 +7,4 @@
 * [ ] json schema for request validation
 * [ ] use https://www.netlify.com/blog/introducing-netlify-functions-2-0/
 * [x] webpack for frontend
-* [ ] typescript for frontend
+* [x] typescript for frontend

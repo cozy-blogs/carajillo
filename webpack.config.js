@@ -14,7 +14,7 @@ require('dotenv').config();
 module.exports = {
   mode: process.env.NODE_ENV === 'develepoment' ? 'development' : 'production',
   entry: {
-    main: path.resolve(__dirname, 'frontend/mailer.js'),
+    main: path.resolve(__dirname, 'frontend/main.ts'),
   },
   output: {
     path: path.resolve(__dirname, 'frontend/dist'),
@@ -35,7 +35,15 @@ module.exports = {
   ],
   module: {
     rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
     ],
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
   },
 };
 

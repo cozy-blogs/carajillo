@@ -1,15 +1,21 @@
-let recaptchaSiteKey = null;
+let recaptchaSiteKey: string | null = null;
 
-async function main() {
+export async function main() {
   await domReady();
   try {
     recaptchaSiteKey = await getCaptchaSiteKey();
     await loadCaptcha(recaptchaSiteKey);
     await subscribe();
   } catch (error) {
-    document.querySelectorAll(".subscribe-form").forEach(function(form) {
-      const status = form.querySelector(".subscribe-status");
-      status.innerText = `🙈 ${error.message}`;
+    document.querySelectorAll<HTMLFormElement>(".subscribe-form").forEach((form) => {
+      const status = form.querySelector<HTMLElement>(".subscribe-status");
+      if (status) {
+        let message = "🙈 Something went wrong.";
+        if (error instanceof Error) {
+          message = `🙈 ${error.message}`;
+        }
+        status.innerText = message;
+      }
     });
   }
 }
@@ -24,20 +30,22 @@ function domReady() {
 }
 
 async function subscribe() {
-  document.querySelectorAll(".subscribe-form").forEach(function(form) {
+  document.querySelectorAll<HTMLFormElement>(".subscribe-form").forEach(function(form) {
     //if (new URL(form.action).hostname === "app.loops.so") 
       loopsSubscribeForm(form);
   });
 }
 
-async function getCaptchaSiteKey() {
-  // @todo CORS
+async function getCaptchaSiteKey(): Promise<string> {
+  // @todo cross site request
   const response = await fetch('/api/recaptcha', {
-    'Method': 'GET',
-    'Accept': 'application/json',
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+    }
   });
   if (response.ok) {
-    const data = await response.json();
+    const data : {success: boolean; recaptcha_site_key: string} = await response.json();
     if (typeof data.recaptcha_site_key !== 'string')
       throw new Error("Cannot retrieve reCAPTCHA site key");
     return data.recaptcha_site_key;
@@ -46,7 +54,7 @@ async function getCaptchaSiteKey() {
   }
 }
 
-function loadCaptcha(siteKey) {
+function loadCaptcha(siteKey: string) {
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.addEventListener('load', resolve);
@@ -58,43 +66,60 @@ function loadCaptcha(siteKey) {
   });
 }
 
-function getCaptchaToken(action){
-  return new Promise((resolve) => {
+function getCaptchaToken(action: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!recaptchaSiteKey) {
+      reject(new Error("reCAPTCHA site key not loaded"));
+      return;
+    }
     grecaptcha.ready(() => {
-      grecaptcha.execute(recaptchaSiteKey, {action}).then(resolve);
+      grecaptcha.execute(recaptchaSiteKey!, {action}).then(resolve, reject);
     });
   });
 }
 
-function loopsSubscribeForm(form) {
-  const status = form.querySelector(".subscribe-status");
+function loopsSubscribeForm(form: HTMLFormElement) {
+  const status = form.querySelector<HTMLElement>(".subscribe-status");
   form.addEventListener("submit", async function(event) {
     event.preventDefault();
     form.dataset.status = "in-progress";
-    status.innerHTML = "<progress/>";
+    if (status) {
+      status.innerHTML = "<progress/>";
+    }
 
 
     const {success, message, email} = await loopsSubscribe(form);
-    if (success) {
+    if (success && email) {
       form.dataset.status = "successful";
-      const confirmationLink = document.createElement("a");
-      confirmationLink.href = confirmLink(email);
-      confirmationLink.target = "_blank";
-      confirmationLink.innerText = message;
-      status.replaceChildren(confirmationLink);
+      if (status) {
+        const confirmationLink = document.createElement("a");
+        confirmationLink.href = confirmLink(email);
+        confirmationLink.target = "_blank";
+        confirmationLink.innerText = message;
+        status.replaceChildren(confirmationLink);
+
+      }
     } else {
       form.dataset.status = "failed";
-      status.innerText = message;
+      if (status)
+        status.innerText = message;
     }
   });
 }
 
-function formDataObject(form) {
-  return Object.fromEntries(new FormData(form).entries());
+function formDataObject(form: HTMLFormElement): Record<string, string> {
+  const formData = new FormData(form);
+  const entries: [string, string][] = [];
+  formData.forEach((value, key) => {
+    if (typeof value === 'string') {
+      entries.push([key, value]);
+    }
+  });
+  return Object.fromEntries(entries);
 }
 
 // https://loops.so/docs/forms/custom-form
-async function loopsSubscribe(form) {
+async function loopsSubscribe(form: HTMLFormElement): Promise<{success: boolean; message: string; email?: string}> {
   const messages = {
     success: form.dataset.i18nSuccess || "Subscription successful. Check your email for confirmation.",
     tryLater: form.dataset.i18nTryLater || "Too many signups, please try again in a little while.",
@@ -120,18 +145,17 @@ async function loopsSubscribe(form) {
     }
     const result = await response.json();
     if (result.success) {
-      return {success: true, message: `📨 ${messages.success}`, email: data.email};
+      return {success: true, message: `📨 ${messages.success}`, email: data.email as string};
     } else {
       return {success: false, message: `❌ ${messages.failed.replace("{message}", result.error)}`};
     }
   } catch(error) {
-    return {success: false, message: `❌ ${messages.failed.replace("{message}", error.message)}`};
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {success: false, message: `❌ ${messages.failed.replace("{message}", errorMessage)}`};
   }
 }
 
-function confirmLink(email) {
+function confirmLink(email: string): string {
   const domain = email.replace(/.*@/, "");
   return `https://${domain}/`;
 }
-
-main();

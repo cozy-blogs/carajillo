@@ -2,21 +2,17 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "lib": ["ES2020"],
-    "types": ["node"],
-    "outDir": "./netlify/functions",
-    "rootDir": "./backend",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "dom"],
+    "allowJs": true,
+    "rootDir": "./frontend",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "declaration": false,
-    "declarationMap": false,
-    "sourceMap": false
   },
-  "include": ["backend/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["frontend/**/*"],
+  "exclude": ["node_modules", "frontend/dist"]
 }
 
