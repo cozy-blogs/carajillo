@@ -4,7 +4,6 @@ yarn.lock
 
 # Build outputs
 *.js.map
-*.d.ts
 *.d.ts.map
 frontend/dist/
 
