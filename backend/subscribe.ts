@@ -1,6 +1,7 @@
 import { HttpError } from './http';
 import { validate as recaptchaValidate } from './recaptcha';
 import { upsertContact, sendConfirmationMail } from './loops';
+import { createToken } from './jwt';
 
 const rootUrl = process.env.URL;
 
@@ -13,25 +14,25 @@ interface SubscribeRequest {
 
 export async function subscribe(request: SubscribeRequest) {
   if (typeof request.email !== "string")
-    throw new HttpError(400, "Missing email");
+    throw new HttpError({statusCode: 400, message: "Missing email"});
   if (typeof request.captcha_token !== "string")
-    throw new HttpError(400, "Missing CAPTCHA token");
+    throw new HttpError({statusCode: 400, message: "Missing CAPTCHA token"});
 
   if (request.mailing_lists === undefined) {
     request.mailing_lists = [];
   }
   if (!Array.isArray(request.mailing_lists)) {
-    throw new HttpError(400, "Wrong request");
+    throw new HttpError({statusCode: 400, message: "Malformed request"});
   }
   if (!request.mailing_lists.every((id) => typeof id === 'string')) {
-    throw new HttpError(400, "Wrong request");
+    throw new HttpError({statusCode: 400, message: "Malformed request"});
   }
 
   const {email, mailing_lists, captcha_token, ...properties} = request;
 
   const valid = captcha('subscribe', captcha_token);
   if (!valid) {
-    throw new HttpError(429, 'Try again later');
+    throw new HttpError({statusCode: 429, message: 'Try again later'});
   }
 
   const contact = await upsertContact(email, properties, mailing_lists);
@@ -41,7 +42,7 @@ export async function subscribe(request: SubscribeRequest) {
     return {success: true, contact};
   }
 
-  const token = '--token--'; /// @todo
+  const token = createToken(contact.email);
   await sendConfirmationMail(contact.email, `${rootUrl}/subscribe?token=${token}`, properties.language);
   return {success: true};
 }

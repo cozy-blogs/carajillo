@@ -53,7 +53,11 @@ export function netlify(entrypoint: JsonApiEntrypoint): NetlifyHandler {
     }
 
     if (!(event.httpMethod in entrypoint)) {
-      throw new HttpError(405, `Only ${methods.join(', ')} reqeusts are allowed`);
+      throw new HttpError({
+        statusCode: 405,
+        reason: 'invalid-method',
+        message: `Only ${methods.join(', ')} reqeusts are allowed`
+      });
     }
     const verb = event.httpMethod as CrudMethod;
 
@@ -69,12 +73,16 @@ export function netlify(entrypoint: JsonApiEntrypoint): NetlifyHandler {
       };
     }
     catch (error) {
+      if (error instanceof HttpError) {
+        console.error(`${error.statusCode} ${error.reason} ${error.message}; ${error.details}`);
+      }
       return {
         statusCode: error instanceof HttpError ? error.statusCode : 500,
         headers: headers,
         body: JSON.stringify({
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error occurred',
+          reason: error instanceof HttpError ? error.reason : undefined
         })
       }
     }
@@ -91,9 +99,13 @@ function eventParameters(event: NetlifyEvent): JsonObject {
       try {
         return JSON.parse(event.body || '{}');
       } catch (error) {
-        throw new HttpError(400, 'Invalid JSON');
+        throw new HttpError({statusCode: 400, message: 'Invalid JSON'});
       }
     default:
-      throw new HttpError(405, 'Method not allowed');
+      throw new HttpError({
+        statusCode: 405,
+        reason: 'invalid-method',
+        message: 'Method not allowed'
+     });
   }
 }

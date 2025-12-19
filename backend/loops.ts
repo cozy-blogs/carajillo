@@ -114,14 +114,14 @@ async function findDoubleOptInEmail(language?: string) {
 
 
 interface Iterator {
-    /**
-     * The next cursor (for retrieving the next page of results using the `cursor` parameter), or `null` if there are no further pages.
-     */
-    nextCursor: string | null;
-    /**
-     * The URL of the next page of results, or `null` if there are no further pages.
-     */
-    nextPage: string | null;
+  /**
+   * The next cursor (for retrieving the next page of results using the `cursor` parameter), or `null` if there are no further pages.
+   */
+  nextCursor: string | null;
+  /**
+   * The URL of the next page of results, or `null` if there are no further pages.
+   */
+  nextPage: string | null;
 }
 
 interface Iterable<T> {

@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { HttpError } from './http';
+import { error } from 'node:console';
 
 interface RecaptchaResponse {
   success: boolean;
@@ -26,13 +27,46 @@ export async function validate(action: string, token: string): Promise<boolean> 
   console.log(`CAPTCHA: score=${captcha.score} action=${captcha.action} challenge_ts=${captcha.challenge_ts} hostname=${captcha.hostname}`);
 
   if (captcha['error-codes']) {
+    // missing-input-secret   - The secret parameter is missing.
+    // invalid-input-secret   - The secret parameter is invalid or malformed.
+    // missing-input-response - The response parameter is missing.
+    // invalid-input-response - The response parameter is invalid or malformed.
+    // bad-request            - The request is invalid or malformed.
+    // timeout-or-duplicate   - The response is no longer valid: either is too old or has been used previously.
     console.error(`CAPTCHA error codes: ${captcha['error-codes']?.join(', ')}`);
-    throw new HttpError(400, `CAPTCHA error: ${captcha['error-codes']?.join(', ')}`);
+    const errorCodes :string[] = captcha['error-codes'];
+    if (errorCodes.includes('invalid-input-response')) {
+      throw new HttpError({
+        statusCode: 400,
+        reason: 'bad-captcha',
+        message: 'Bad request',
+        details: `CAPTCHA error: ${errorCodes.join(', ')}`,
+      });
+    } else if (errorCodes.includes('timeout-or-duplicate')) {
+      throw new HttpError({
+        statusCode: 429,
+        reason: 'captcha-timeout',
+        message: 'Try again',
+        details: `CAPTCHA error: ${errorCodes.join(', ')}`,
+      });
+    } else {
+     throw new HttpError({
+       statusCode: 500,
+       message: 'Internal server error',
+       details: `CAPTCHA error: ${errorCodes.join(', ')}`
+     });
+
+    }
   }
 
   if(captcha.action !== action) {
     console.error(`CAPTION action does not match: expected=${action} actual=${captcha.action}`);
-    throw new HttpError(400, "CAPTCHA error: action-mismatch");
+    throw new HttpError({
+      statusCode: 400,
+      reason: 'captcha-action-mismatch',
+      message: 'Bad reqeust',
+      details: "CAPTCHA error: action-mismatch"
+    });
   }
 
   if(captcha.score < THRESHOLD) {
@@ -74,6 +108,10 @@ export async function verifyToken(token: string): Promise<RecaptchaResponse> {
     return data;
   } else {
     console.error(`reCAPTCHA error: ${JSON.stringify(data)}`);
-    throw new HttpError(400, "reCAPTCHA validatation failed");
+    throw new HttpError({
+      statusCode: 500,
+      message: 'Internal server error',
+      details: "reCAPTCHA validatation failed",
+    });
   }
 }
