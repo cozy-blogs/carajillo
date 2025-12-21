@@ -73,16 +73,30 @@ export async function subscribe(request: SubscribeRequest) {
 }
 
 
+export interface MailingList {
+    /**
+     * The ID of the list.
+     */
+    id: string;
+
+    /**
+     * The name of the list.
+     */
+    name: string;
+
+    /**
+     * The list's description.
+     */
+    description: string | null;
+
+    subscribed: boolean;
+}
+
 export interface SubscriptionStatus {
   success: true;
   email: string;
   subscribed: boolean;
-  mailingLists: {
-    id: string;
-    name: string;
-    description: string | null;
-    subscribed: boolean;
-  }[];
+  mailingLists: MailingList[];
 }
 
 export async function getSubscription(email: string): Promise<SubscriptionStatus> {

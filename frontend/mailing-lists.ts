@@ -6,35 +6,20 @@ import {repeat} from 'lit/directives/repeat.js';
 import {consume} from '@lit/context';
 import {Settings, tokenContext, settingsContext} from './context';
 import {MdSwitch} from '@material/web/switch/switch';
-import {UpdateSubscriptionRequest} from '../backend/subscribe';
+import {SubscriptionStatus, UpdateSubscriptionRequest} from '../backend/subscribe';
 
 // https://material-web.dev/components/list/
 // https://material-web.dev/components/switch/
-// todo show e-mail, company name
+// @todo show e-mail, company name
+// @todo use fab https://material-web.dev/components/fab/ for main subscription
 
-interface MailingList {
-    /**
-     * The ID of the list.
-     */
-    id: string;
-    /**
-     * The name of the list.
-     */
-    name: string;
-    /**
-     * The list's description.
-     */
-    description: string | null;
+// status
+// <md-linear-progress indeterminate></md-linear-progress>
+// <md-suggestion-chip>
+//    <md-icon slot="icon">error</md-icon>${errorMessage}
+// </md-suggestion-chip>
+// 
 
-    subscribed: boolean;
-}
-
-export interface SubscriptionStatus {
-  success: boolean;
-  email: string;
-  subscribed: boolean;
-  mailingLists: MailingList[];
-}
 
 @customElement('mailer-subscription-control')
 export class Subscription extends LitElement {
@@ -89,8 +74,7 @@ export class Subscription extends LitElement {
                   ?selected=${list.subscribed} ?disabled=${!status.subscribed}
                   @change=${this.onChange}>
                 </mailer-list-subscription>`
-      )}
-
+            )}
           </md-list>
           <md-linear-progress indeterminate></md-linear-progress>
         </div>
