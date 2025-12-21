@@ -3,8 +3,8 @@ import express, { Router } from "express";
 import { middleware as errorMiddleware, HttpError } from "./error";
 
 import { authenticate } from "./jwt";
-import { subscribe, getSubscription, setSubscription } from "./subscribe"
-import { SubscribeRequest, SetSubscriptionRequest } from "./subscribe";
+import { subscribe, getSubscription, updateSubscription } from "./subscribe"
+import { SubscribeRequest, UpdateSubscriptionRequest } from "./subscribe";
 import { getMailingLists } from "./loops";
 import { configuration as captchaConfiguration } from "./recaptcha";
 
@@ -39,7 +39,7 @@ router.get("/subscribe", async (req, res) => {
 });
 router.put("/subscribe", async (req, res) => {
   const email = authenticate(req);
-  const request = req.body as SetSubscriptionRequest;
+  const request = req.body as UpdateSubscriptionRequest;
   if (request.email !== email) {
     throw new HttpError({
       statusCode: 403,
@@ -47,7 +47,7 @@ router.put("/subscribe", async (req, res) => {
       details: "E-mail address from request does not match JWT."
     });
   }
-  const response = await setSubscription(request);
+  const response = await updateSubscription(request);
   res.json(response);
 });
 

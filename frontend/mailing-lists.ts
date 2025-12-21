@@ -5,6 +5,8 @@ import {Task} from '@lit/task';
 import {repeat} from 'lit/directives/repeat.js';
 import {consume} from '@lit/context';
 import {Settings, tokenContext, settingsContext} from './context';
+import {MdSwitch} from '@material/web/switch/switch';
+import {UpdateSubscriptionRequest} from '../backend/subscribe';
 
 // https://material-web.dev/components/list/
 // https://material-web.dev/components/switch/
@@ -48,8 +50,8 @@ export class Subscription extends LitElement {
   @property({attribute: false})
   public settings?: Settings;
 
-  @property({attribute: true})
-  public subscribed?: boolean = true;
+  // @property({attribute: true})
+  // public subscribed?: boolean = true;
 
   _fetchSubscriptionsTask = new Task(this, {
     task: async ([token, settings], {signal}) => {
@@ -67,6 +69,7 @@ export class Subscription extends LitElement {
   });
 
   render() {
+    // @todo label https://material-web.dev/components/switch/#label
     return this._fetchSubscriptionsTask.render({
       pending: () => html`<md-circular-progress four-color indeterminate></md-circular-progress>`,
       complete: (status) => html`
@@ -75,14 +78,16 @@ export class Subscription extends LitElement {
             <md-list-item type="button">
               <div slot="headline">Subscribe for newsletter</div>
               <div slot="trailing-supporting-text">
-                <md-switch icons ?selected=${this.subscribed}></md-switch>
+                <md-switch icons id="subscribe" ?selected=${status.subscribed} @change=${this.onChange}></md-switch>
               </div>
             </md-list-item>
             ${repeat(
               status.mailingLists,
               (list) => list.id,
               (list, index) => html`
-                <mailer-list-subscription id=${list.id} name=${list.name} description=${list.description} ?disabled=${!this.subscribed}>
+                <mailer-list-subscription id=${list.id} name=${list.name} description=${list.description}
+                  ?selected=${list.subscribed} ?disabled=${!status.subscribed}
+                  @change=${this.onChange}>
                 </mailer-list-subscription>`
       )}
 
@@ -92,6 +97,27 @@ export class Subscription extends LitElement {
         `,
       error: (e) => html`<p>Error: ${e}</p>`
     });
+  }
+
+  private async onChange(e: Event) {
+    const subscribe : boolean = this.querySelector<MdSwitch>('#subscribe')?.selected || false;
+    const mailingLists : Record<string, boolean> = {};
+    this.querySelectorAll<ListSubscription>('mailer-list-subscription').forEach((list) => {
+      mailingLists[list.id] = list.subscribed;
+    })
+
+    // const request : UpdateSubscriptionRequest = {subscribe, mailingLists};
+    
+    // const response = await fetch(`/api/subscribe`, {
+    //   method: 'PUT',
+    //   headers: {
+    //     'Authorization': `Bearer ${this.token}`,
+    //     'Accept': 'application/json',
+    //     'Content-Type': 'application/json; charset=utf-8',
+    //   },
+    //   body: JSON.stringify(request)
+    // });
+    // @todo handle error
   }
 }
 
@@ -124,10 +150,26 @@ export class ListSubscription extends LitElement {
         <div slot="headline">${this.name}</div>
         <div slot="supporting-text">${this.description}</div>
         <div slot="trailing-supporting-text">
-          <md-switch icons ?selected=${this.subscribed} ?disabled=${this.disabled}></md-switch>
+          <md-switch icons ?selected=${this.subscribed} ?disabled=${this.disabled} @change=${this.onChange}></md-switch>
         </div>
       </md-list-item>
     `;
   }
 
+  private onChange(e: Event) {
+    const subscribe = (e.target as MdSwitch).selected;
+    this.subscribed = subscribe;
+    this.dispatchEvent(new SubscriptionChangeEvent(this.mailingListId, subscribe));
+  }
+}
+
+class SubscriptionChangeEvent extends Event {
+  subscribe: boolean;
+  mailingListId?: string;
+
+  constructor(mailingListId: string | undefined, subscribe: boolean) {
+    super('change');
+    this.mailingListId = mailingListId;
+    this.subscribe = subscribe;
+  }
 }

@@ -103,7 +103,7 @@ export async function getSubscription(email: string): Promise<SubscriptionStatus
 }
 
 
-export interface SetSubscriptionRequest {
+export interface UpdateSubscriptionRequest {
   email: string;
 
   /**
@@ -119,7 +119,7 @@ export interface SetSubscriptionRequest {
   mailingLists: Record<string, boolean>;
 }
 
-export async function setSubscription({email, subscribe, mailingLists}: SetSubscriptionRequest) {
+export async function updateSubscription({email, subscribe, mailingLists}: UpdateSubscriptionRequest) {
   if (subscribe) {
     await subscribeContact(email, mailingLists);   
   } else {
