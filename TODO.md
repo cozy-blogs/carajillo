@@ -11,3 +11,8 @@
 * [x] webpack for frontend
 * [x] typescript for frontend
 * [ ] https://lit.dev/docs/tools/production/#modern-only-build ?
+* [ ] localization
+* [ ] token refresh
+  - [ ] due to server secret rotation
+  - [ ] due to token expiration
+
