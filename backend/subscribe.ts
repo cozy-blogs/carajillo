@@ -1,8 +1,10 @@
 import { HttpError } from './error';
 import { verifyCaptcha } from './recaptcha';
-import { Contact, findContact, upsertContact, sendConfirmationMail, subscribeContact, unsubscribeContact, getMailingLists } from './loops';
+import { findContact, upsertContact, sendConfirmationMail, subscribeContact, unsubscribeContact, getMailingLists } from './loops';
 import { createToken } from './jwt';
 
+// @todo this env is netlify specific
+// https://docs.netlify.com/build/configure-builds/environment-variables/#deploy-urls-and-metadata
 const rootUrl = process.env.URL;
 
 export interface SubscribeRequest {
@@ -20,6 +22,9 @@ export interface SubscribeRequest {
  * and protects the entry with CAPTCHA mechanizm.
  */
 export async function subscribe(request: SubscribeRequest) {
+  if (rootUrl === undefined) {
+    throw new HttpError({statusCode: 500, message: "Internal Server error", details: 'missing URL env'});
+  }
   if (typeof request.email !== "string")
     throw new HttpError({statusCode: 400, message: "Missing email"});
   /// @todo make captcha_token optional
@@ -57,7 +62,7 @@ export async function subscribe(request: SubscribeRequest) {
     }
   }
 
-  const token = createToken(contact.email);
+  const token = createToken(contact.email, rootUrl);
   const params = new URLSearchParams({token});
   if (properties.language !== undefined) {
     params.set('lang', properties.language)

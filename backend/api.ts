@@ -2,7 +2,7 @@
 import express, { Router } from "express";
 import { middleware as errorMiddleware, HttpError } from "./error";
 
-import { validateToken } from "./jwt";
+import { authenticate } from "./jwt";
 import { subscribe, getSubscription, setSubscription } from "./subscribe"
 import { SubscribeRequest, SetSubscriptionRequest } from "./subscribe";
 import { getMailingLists } from "./loops";
@@ -33,18 +33,12 @@ router.post("/subscribe", async (req, res) => {
   res.json(response);
 });
 router.get("/subscribe", async (req, res) => {
-  // @todo https://www.npmjs.com/package/express-bearer-token
-  const token = req.headers.authorization?.match(/Bearer ([^ ]+)/);
-  if (!token)
-    throw new HttpError({statusCode: 401, message: 'Unauthorized'});
-
-  console.log(`GET /api/subscribe; token=${token}`);
-  const email = validateToken(token[1]);
+  const email = authenticate(req);
   const response = await getSubscription(email);
   res.json(response);
 });
 router.put("/subscribe", async (req, res) => {
-  const email = validateToken(req.query.token as string);
+  const email = authenticate(req);
   const request = req.body as SetSubscriptionRequest;
   if (request.email !== email) {
     throw new HttpError({
@@ -59,7 +53,7 @@ router.put("/subscribe", async (req, res) => {
 
 // CAPTCHA settings.
 // Those are prebuilt on Netlify and should not be serverd by function.
-// This is just a backup in case served outside of Netlify.
+// This is just a backup in case the app is served outside of Netlify.
 router.get("/captcha", async (req, res) => {
   res.json({success: true, ...captchaConfiguration(), generated: true});
 });

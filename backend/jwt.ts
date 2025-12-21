@@ -1,8 +1,13 @@
 
-import { sign, verify, JwtPayload, Algorithm, JsonWebTokenError, TokenExpiredError, NotBeforeError} from 'jsonwebtoken';
+import { sign, verify, JwtPayload, Algorithm, JsonWebTokenError, TokenExpiredError, NotBeforeError, SignOptions} from 'jsonwebtoken';
 import { HttpError } from './error';
+import { StringValue as TimeDeltaString } from 'ms';
+import { Request } from 'express';
 
 const SECRET = process.env.JWT_SECRET;
+// @todo refresh mechanizm is needed to really handle expiration
+// @see https://www.npmjs.com/package/ms
+const TOKEN_EXPIRATION : TimeDeltaString = process.env.JWT_EXPIRATION as TimeDeltaString || '1 year';
 const ALGORITHM : Algorithm = 'HS512'; // HMAC with SHA-512 hash
 
 /***
@@ -11,7 +16,7 @@ const ALGORITHM : Algorithm = 'HS512'; // HMAC with SHA-512 hash
  * @param email  User's email address
  * @see https://datatracker.ietf.org/doc/html/rfc7519
  */
-export function createToken(email: string): string
+export function createToken(email: string, issuer: string): string
 {
   if (SECRET === undefined) {
     throw new HttpError({
@@ -21,16 +26,25 @@ export function createToken(email: string): string
     });
   }
 
-  return sign ({}, SECRET,
-    {
+  const options : SignOptions = {
       subject: email,
-      // @todo
-      // issuer: newsletter address
-      // audience: server domain
+      issuer: issuer,
       algorithm: ALGORITHM,
-      expiresIn: '7 days',
-    }
-  );
+      expiresIn: TOKEN_EXPIRATION,
+  };
+
+  return sign ({}, SECRET, options);
+}
+
+export function authenticate(req: Request): string {
+  // @todo https://www.npmjs.com/package/express-bearer-token?
+  const token = req.headers.authorization?.match(/Bearer ([^ ]+)/);
+  if (!token)
+    throw new HttpError({statusCode: 401, message: 'Unauthorized'});
+  // @todo WWW-Authenticate header?
+
+  console.log(`token=${token}`);
+  return validateToken(token[1], `${req.protocol}://${req.hostname}`);
 }
 
 /**
@@ -39,7 +53,7 @@ export function createToken(email: string): string
  * Throws 401 Unauthorized if verification fails.
  * @return User's email address
  */
-export function validateToken(jwt: string): string
+export function validateToken(jwt: string, issuer: string): string
 {
   if (SECRET === undefined) {
     throw new HttpError({
@@ -49,7 +63,7 @@ export function validateToken(jwt: string): string
     });
   }
 
-  // @todo how to rotate the secret?
+  // @todo add way rotate the server secret and client token after expiration
   let payload: JwtPayload;
   
   try {
@@ -57,7 +71,7 @@ export function validateToken(jwt: string): string
     payload = verify(jwt, SECRET, {
       algorithms: [ALGORITHM],
       complete: false,
-      // @todo verify audience & issuer
+      issuer
     }) as JwtPayload;
   } catch(error) {
     if (error instanceof TokenExpiredError) {

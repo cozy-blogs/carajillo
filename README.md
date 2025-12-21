@@ -274,9 +274,8 @@ sequenceDiagram
 
 ```json
 {
-  "iss": "newsletter@domain.org",
   "sub": "subcriber@example.com",
-  "aud": "mailer.domain.org",
+  "iss": "mailer.domain.org",
   "exp": Date.now()/1000 + 600 
 }
 ```
