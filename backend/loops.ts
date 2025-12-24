@@ -1,4 +1,4 @@
-import { LoopsClient, APIError, RateLimitExceededError } from "loops";
+import { LoopsClient, APIError, RateLimitExceededError, ContactProperty } from "loops";
 
 const API_KEY = process.env.LOOPS_SO_SECRET;
 
@@ -10,6 +10,29 @@ if (API_KEY === undefined)
   throw new Error('Configuration error');
 
 const loops = new LoopsClient(API_KEY);
+
+
+/**
+ * Initialize Loops — create custom properties.
+ * 
+ * @see https://loops.so/docs/contacts/properties
+ */
+export async function initialize() {
+  const properties: ContactProperty[] = await loops.getCustomProperties('custom');
+
+  const upsertProperty = async (name: string, type: "string" | "number" | "boolean" | "date") => {
+    if (!properties.some((prop) => prop.key === name)) {
+      console.info(`creating ${name} property`);
+      loops.createContactProperty(name, type);
+    }
+  };
+
+  // Language prefered by contact; ISO 639 code.
+  upsertProperty('language', 'string');
+
+  // Custom double opt-in status - 'pending', 'accepted' or 'rejected'.
+  upsertProperty('xOptInStatus', 'string');
+}
 
 /**
  * Get publicly available mailing lists.
