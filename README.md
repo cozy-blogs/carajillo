@@ -154,7 +154,7 @@ Retrieves the list of publicly available mailing lists.
 ]
 ```
 
-#### GET /api/subscribe
+#### GET /api/subscription
 
 Retrieves the subscription status for the authenticated user. Requires JWT token in `Authorization: Bearer <token>` header.
 
@@ -175,7 +175,7 @@ Retrieves the subscription status for the authenticated user. Requires JWT token
 }
 ```
 
-#### POST /api/subscribe
+#### POST /api/subscription
 
 Subscribes an email address to the newsletter with double opt-in. Sends a confirmation email to the user.
 
@@ -212,7 +212,7 @@ Subscribes an email address to the newsletter with double opt-in. Sends a confir
 }
 ```
 
-#### PUT /api/subscribe
+#### PUT /api/subscription
 
 Updates subscription status for the authenticated user. Requires JWT token in `Authorization: Bearer <token>` header.
 

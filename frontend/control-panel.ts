@@ -8,8 +8,10 @@ import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { provide } from '@lit/context';
 import { Task } from '@lit/task';
+import { msg } from '@lit/localize';
 import { Settings, apiRoot, tokenContext, settingsContext } from './context';
-import { SubscriptionStatus } from '../backend/subscribe';
+import { SubscriptionStatus } from '../backend/subscription';
+import { setLocale, initializeLocale } from './localize';
 
 const query = new URLSearchParams(window.location.search);
 function getToken(): string | undefined {
@@ -36,12 +38,20 @@ export class ControlPanel extends LitElement {
   @provide({context: settingsContext})
   settings: Settings = getSettings();
 
+  async connectedCallback() {
+    super.connectedCallback();
+    await initializeLocale();
+    if (this.settings?.language) {
+      await setLocale(this.settings.language);
+    }
+  }
+
   private fetchSubscriptionTask = new Task(this, {
     task: async ([token], {signal}) => {
       if (token === undefined) {
-        throw new Error('missing authorization token');
+        throw new Error(msg('missing authorization token'));
       }
-      const response = await fetch(`${apiRoot}/subscribe`, {
+      const response = await fetch(`${apiRoot}/subscription`, {
         headers: {Authorization: `Bearer ${token}`},
         signal
       });
@@ -60,7 +70,7 @@ export class ControlPanel extends LitElement {
       complete: (status) => {
         return html`<mailer-subscription-control .data=${status} ></mailer-subscription-control>`;
       },
-      error: (error) => html`<md-suggestion-chip><md-icon slot="icon">error</md-icon>${error}</md-suggestion-chip>`
+      error: (error) => html`<md-suggestion-chip><md-icon slot="icon">error</md-icon>${String(error)}</md-suggestion-chip>`
     });
   }
 }

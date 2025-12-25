@@ -44,7 +44,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /subscribe:
+  /subscription:
     get:
       summary: Get subscription status
       description: Retrieves the subscription status for the authenticated user

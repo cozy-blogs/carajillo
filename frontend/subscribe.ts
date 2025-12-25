@@ -1,16 +1,25 @@
 import { apiRoot } from "./context";
+import { setLocale } from "./localize";
+import { msg, str } from '@lit/localize';
 
 let recaptchaSiteKey: string | null = null;
 
+async function initializeLocale() {
+  const locale = document.documentElement.lang || new URLSearchParams(window.location.search).get('lang') || 'en';
+  await setLocale(locale);
+}
+
 export async function main() {
   await domReady();
+  await initializeLocale();
+  
   try {
     recaptchaSiteKey = await getCaptchaSiteKey();
     await loadCaptcha(recaptchaSiteKey);
     await subscribe();
   } catch (error) {
     document.querySelectorAll<HTMLElement>(".subscribe-form .subscribe-status").forEach((status) => {
-        const message = (error instanceof Error) ? error.message : "Something went wrong.";
+        const message = (error instanceof Error) ? error.message : msg('Something went wrong.');
         status.innerText = `🙈 ${message}`;
     });
   }
@@ -42,10 +51,10 @@ async function getCaptchaSiteKey(): Promise<string> {
   if (response.ok) {
     const data : {success: boolean; provider: string, site_key: string} = await response.json();
     if (typeof data.site_key !== 'string')
-      throw new Error("Cannot retrieve reCAPTCHA site key");
+      throw new Error(msg('Cannot retrieve reCAPTCHA site key'));
     return data.site_key;
   } else {
-    throw new Error("Cannot retrieve reCAPTCHA site key");
+    throw new Error(msg('Cannot retrieve reCAPTCHA site key'));
   }
 }
 
@@ -64,7 +73,7 @@ function loadCaptcha(siteKey: string) {
 function getCaptchaToken(action: string): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!recaptchaSiteKey) {
-      reject(new Error("reCAPTCHA site key not loaded"));
+      reject(new Error(msg('reCAPTCHA site key not loaded')));
       return;
     }
     grecaptcha.ready(() => {
@@ -115,12 +124,6 @@ function formDataObject(form: HTMLFormElement): Record<string, string> {
 
 // https://loops.so/docs/forms/custom-form
 async function loopsSubscribe(form: HTMLFormElement): Promise<{success: boolean; message: string; email?: string}> {
-  const messages = {
-    success: form.dataset.i18nSuccess || "Subscription successful. Check your email for confirmation.",
-    tryLater: form.dataset.i18nTryLater || "Too many signups, please try again in a little while.",
-    failed: form.dataset.i18nFailed || "Subscription failed: {message}",
-  };
-
   const data = formDataObject(form);
   data.captcha_token = await getCaptchaToken('subscribe');
 
@@ -136,17 +139,17 @@ async function loopsSubscribe(form: HTMLFormElement): Promise<{success: boolean;
       }
     });
     if (response.status == 429) {
-      return {success: false, message: `⏳ ${messages.tryLater}`};
+      return {success: false, message: msg(`⏳ Too many signups, please try again in a little while.`)};
     }
     const result = await response.json();
     if (result.success) {
-      return {success: true, message: `📨 ${messages.success}`, email: data.email as string};
+      return {success: true, message: msg(`📨 Subscription successful. Check your email for confirmation.`), email: data.email as string};
     } else {
-      return {success: false, message: `❌ ${messages.failed.replace("{message}", result.error)}`};
+      return {success: false, message: msg(str`❌ Subscription failed: ${result.error}`)};
     }
   } catch(error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return {success: false, message: `❌ ${messages.failed.replace("{message}", errorMessage)}`};
+    return {success: false, message: msg(str`❌ Subscription failed: ${errorMessage}`)};
   }
 }
 

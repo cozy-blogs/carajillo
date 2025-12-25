@@ -6,20 +6,16 @@ import { queryAll } from 'lit/decorators/query-all.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { Task } from '@lit/task';
 import { consume } from '@lit/context';
+import { msg } from '@lit/localize';
 import { MdSwitch } from '@material/web/switch/switch';
-import { apiRoot, Settings, tokenContext, settingsContext } from './context';
-import { SubscriptionStatus, UpdateSubscriptionRequest } from '../backend/subscribe';
+import { apiRoot, tokenContext } from './context';
+import { SubscriptionStatus, UpdateSubscriptionRequest } from '../backend/subscription';
 
 @customElement('mailer-subscription-control')
 export class Subscription extends LitElement {
   @consume({context: tokenContext})
   @property({attribute: false})
   private token?: string;
-
-  // @todo not needed?
-  @consume({context: settingsContext})
-  @property({attribute: false})
-  public settings?: Settings;
 
   @property({
     attribute: false,
@@ -47,7 +43,7 @@ export class Subscription extends LitElement {
       const status = this.updateSubscriptionTask.render({
         pending: () => html`<md-linear-progress indeterminate></md-linear-progress>`,
         complete: () => html``,
-        error: (error) => html`<md-suggestion-chip><md-icon slot="icon">error</md-icon>${error}</md-suggestion-chip>`
+        error: (error) => html`<md-suggestion-chip><md-icon slot="icon">error</md-icon>${String(error)}</md-suggestion-chip>`
       })
 
       // @todo show e-mail, company name
@@ -56,7 +52,7 @@ export class Subscription extends LitElement {
       return html`
         <md-list>
           <md-list-item type="button">
-            <div slot="headline">Subscribe for newsletter</div>
+            <div slot="headline">${msg('Subscribe for newsletter')}</div>
             <div slot="trailing-supporting-text">
               <md-switch icons id="subscribe" ?selected=${data.subscribed} @change=${this.onChange}></md-switch>
             </div>
@@ -78,7 +74,7 @@ export class Subscription extends LitElement {
   private updateSubscriptionTask = new Task(this, {
     task: async ([data, token], {signal}) => {
       if (token === undefined) {
-        throw new Error('missing authorization token');
+        throw new Error(msg('missing authorization token'));
       }
       if (this.data === undefined)
         return;
@@ -92,7 +88,7 @@ export class Subscription extends LitElement {
 
       const request : UpdateSubscriptionRequest = {email, subscribe, mailingLists};
       try {
-        const response = await fetch(`${apiRoot}/subscribe`, {
+        const response = await fetch(`${apiRoot}/subscription`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${this.token}`,

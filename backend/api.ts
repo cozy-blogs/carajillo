@@ -4,8 +4,8 @@ import { middleware as errorMiddleware, HttpError } from "./error";
 import { middleware as openApiValidator } from "express-openapi-validator";
 
 import { authenticate } from "./jwt";
-import { subscribe, getSubscription, updateSubscription } from "./subscribe"
-import type { SubscribeRequest, UpdateSubscriptionRequest } from "./subscribe";
+import { subscribe, getSubscription, updateSubscription } from "./subscription"
+import type { SubscribeRequest, UpdateSubscriptionRequest } from "./subscription";
 import { getMailingLists } from "./loops";
 import { configuration as captchaConfiguration } from "./recaptcha";
 import { openApiSpec } from "./openapi-spec";
@@ -37,16 +37,16 @@ const apiSpecValidator = openApiValidator({
 
 const router = Router();
 
-router.post("/subscribe", async (req, res) => {
+router.post("/subscription", async (req, res) => {
   const response = await subscribe(req.body as SubscribeRequest);
   res.json(response);
 });
-router.get("/subscribe", async (req, res) => {
+router.get("/subscription", async (req, res) => {
   const email = authenticate(req);
   const response = await getSubscription(email);
   res.json(response);
 });
-router.put("/subscribe", async (req, res) => {
+router.put("/subscription", async (req, res) => {
   const email = authenticate(req);
   const request = req.body as UpdateSubscriptionRequest;
   if (request.email !== email) {
