@@ -2,6 +2,7 @@ import { HttpError } from './error';
 import { verifyCaptcha } from './recaptcha';
 import { findContact, upsertContact, sendConfirmationMail, subscribeContact, unsubscribeContact, getMailingLists } from './loops';
 import { createToken } from './jwt';
+import { log } from 'node:console';
 
 // @todo this env is netlify specific
 // https://docs.netlify.com/build/configure-builds/environment-variables/#deploy-urls-and-metadata
@@ -12,6 +13,7 @@ export interface SubscribeRequest {
   language?: string;
   captcha_token: string;
   mailing_lists: string[];
+  // @todo extra properties
 };
 
 /**
@@ -22,6 +24,7 @@ export interface SubscribeRequest {
  * and protects the entry with CAPTCHA mechanizm.
  */
 export async function subscribe(request: SubscribeRequest) {
+  console.info(`subscribe: ${JSON.stringify(request)}`);
   if (rootUrl === undefined) {
     throw new HttpError({statusCode: 500, message: "Internal Server error", details: 'missing URL env'});
   }
@@ -53,11 +56,17 @@ export async function subscribe(request: SubscribeRequest) {
   }
 
   const contact = await upsertContact(email, properties, mailing_lists);
-  if (contact.subscribed) {
-    console.info(`contact already subscribed: ${contact.email}`);
+  if (contact.optInStatus == 'rejected') {
+    throw new HttpError({
+      statusCode: 429,
+      message: 'Try again later',
+      details: `Contact rejected subscription before ${contact.email}`
+    });
+  } else if (contact.optInStatus == 'accepted') {
+    console.info(`Contact already subscribed: ${contact.email}`);
     if (mailing_lists.every((requestedMailingList) => contact.mailingLists[requestedMailingList]))
     {
-      console.info('already subscribed for all requested mailing lists - do not send e-mail');
+      console.info('Already subscribed for all requested mailing lists - do not send e-mail');
       return {success: true, contact};
     }
   }

@@ -111,8 +111,10 @@ is only supported when subscribing through forms.  API can read the `optInStatus
 To circumvent this issue you need to keep the loops double opt-in mechanizm disabled.
 Go to [sending options](https://app.loops.so/settings?page=sending) and make sure the `New contacts confirm subscription by email` option is disabled.
 
+Check https://loops.so/docs/api-reference/changelog
+
 Instead the mailer will use it's own mechanizm with custom `xOptInStatus` property.
-It will search for transactional e-mail with `{optInUrl}` data variable.
+It will search for transactional e-mail with `{xOptInUrl}` data variable.
 You can translate confirmation email into multiple languages.
 Mailer will try to find right translation by email name.
 

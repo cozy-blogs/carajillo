@@ -35,6 +35,8 @@ export async function initialize() {
   // Custom double opt-in status - 'pending', 'accepted' or 'rejected'.
   upsertProperty('xOptInStatus', 'string');
 
+  // @todo fill new property with optInStatus
+
   console.info('loops initialized successfully');
 }
 
@@ -98,7 +100,11 @@ export async function upsertContact(email: string, properties: ContactProperties
     const mailingLists = Object.fromEntries(mailingListsIds.map(listId => [listId, true]));
     const createResponse = await loops.createContact({
       email,
-      properties: {xOptInStatus: 'pending', ...properties},
+      properties: {
+        subscribed: false,
+        xOptInStatus: 'pending',
+        ...properties
+      },
       mailingLists,
     });
     return {
@@ -141,13 +147,15 @@ export async function sendConfirmationMail(email: string, confirmUrl: string, la
 {
   const confirmationEmail = await findDoubleOptInEmail(language);
   console.log(`Sending ${confirmationEmail.name} to ${email} with ${confirmUrl}`);
+  console.log(`Data variables: ${JSON.stringify(confirmationEmail.dataVariables)}`);
+  // @todo other variables? logo?
   loops.sendTransactionalEmail({
     email: email,
     transactionalId: confirmationEmail.id,
     dataVariables: {
       companyName,
       companyAddress,
-      optInUrl: confirmUrl,
+      xOptInUrl: confirmUrl,
     }
   });
 }
@@ -164,7 +172,7 @@ const getTransactionalEmails = unpaginate(loops.getTransactionalEmails.bind(loop
 /**
  * Find the transactional e-mail used to confirm subscripton.
  * 
- * The double opt-in e-mail should have `optInUrl` in it's data variables
+ * The double opt-in e-mail should have `xOptInUrl` in it's data variables
  * and language code in its name e.g. `#PL` if email is in polish.
  * 
  * @param language  Prefered language
@@ -172,7 +180,7 @@ const getTransactionalEmails = unpaginate(loops.getTransactionalEmails.bind(loop
  */
 async function findDoubleOptInEmail(language?: string) {
   const transactionalEmails = await getTransactionalEmails();
-  const doubleOptInEmails = transactionalEmails.filter((email) => email.dataVariables.includes('optInUrl'));
+  const doubleOptInEmails = transactionalEmails.filter((email) => email.dataVariables.includes('xOptInUrl'));
   if (doubleOptInEmails.length === 0)
     throw new Error("No confirmation e-mail configured");
 

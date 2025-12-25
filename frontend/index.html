@@ -7,19 +7,9 @@
   </head>
   <body>
     <form action="/api/subscribe" method="post" class="subscribe-form">
-      <input type="email" name="email" placeholder="Email">
-      <input type="text" name="donotfillout" style="display:none">
-      <ul class="mailing-lists">
-        <li>
-          <label>
-            <span class="mailing-list-name">name</span>
-            <span class="mailing-list-description">description</span>
-            <input name="mailing-list" value="mailing-list-id" type="checkbox">
-          </label>
-        </li>
-      </ul>
+      <input type="text" name="firstName" placeholder="Name">
+      <input type="email" name="email" placeholder="Email" required>
       <input type="hidden" name="language" value="pl">
-      <input type="hidden" name="recaptcha_token">
       <input type="submit" value="Submit">
       <div class="subscribe-status"></div>
     </form>
