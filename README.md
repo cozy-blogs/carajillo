@@ -16,6 +16,7 @@ Newsletter subscription management for loops.so
 
 ```bash
 npm install
+npx netlify site:create
 ```
 
 ### 2. Configure
@@ -27,13 +28,15 @@ Set your reCAPTCHA secret key as an environment variable in Netlify:
 2. Navigate to "Environment variables"
 3. Add variables:
  - `JWT_SECRET` - Secret key for JWT token signing
- - `RECAPTCHA_SITE_KEY` - reCAPTCHA site key (public)
- - `RECAPTCHA_SECRET` - reCAPTCHA secret key
  - `LOOPS_SO_SECRET` - Loops.so API key
  - `CAPTCHA_PROVIDER` - CAPTCHA provider (default: `recaptcha`, options: `recaptcha`, `none`)
  - `CAPTCHA_THRESHOLD` - CAPTCHA score threshold (default: `0.5`)
+ - `RECAPTCHA_SITE_KEY` - reCAPTCHA site key (public)
+ - `RECAPTCHA_SECRET` - reCAPTCHA secret key
  - `COMPANY_NAME` - Company name for email templates (optional)
  - `COMPANY_ADDRESS` - Company address for email templates (optional)
+ - `COMPANY_LOGO` - URL of company logo impage (optional)
+ - `CORS_ORIGIN` - Domains where submission forms may be created (default: all submissions are accepted)
 
 **Via Netlify CLI:**
 ```bash
@@ -52,19 +55,21 @@ Create a `.env` file in the root directory:
 ```
 JWT_SECRET=long-generated-password-for-token-signing
 
+# https://app.loops.so/settings?page=api
+LOOPS_SO_SECRET=your-secret-key-here
+
 CAPTCHA_PROVIDER=recaptcha|hcaptcha|none
 CAPTCHA_THRESHOLD=0.5
-
 # https://console.cloud.google.com/security/recaptcha/
 RECAPTCHA_SITE_KEY=public-site-key
 RECAPTCHA_SECRET=your-secret-key-here
 
-# https://app.loops.so/settings?page=api
-LOOPS_SO_SECRET=your-secret-key-here
-
 # Optional: Company information for email templates
 COMPANY_NAME=Your Company Name
 COMPANY_ADDRESS=Your Company Address
+COMPANY_LOGO=https://your-company.com/logo.png
+
+CORS_ORIGIN=your-company.com
 ```
 
 **Via Netlify CLI when .env file is created** 
@@ -86,11 +91,6 @@ npm run build
 
 ```bash
 netlify deploy --prod
-```
-
-Or use the Netlify CLI to deploy:
-```bash
-netlify deploy
 ```
 
 ## Local Development
@@ -118,10 +118,18 @@ It will search for transactional e-mail with `xOptInUrl` data variable.
 You can translate confirmation email into multiple languages.
 Mailer will try to find right translation by email name.
 
-
 ### Including form
 
-TODO: describe including subscription form on site
+```html
+<form class="subscription-form" action="https://mailer.example.com/api/honeypot">
+  <input type="text" name="firstName" placeholder="Name">
+  <input type="email" name="email" placeholder="Email" required>
+  <input type="hidden" name="language" value="en">
+  <input type="submit" value="Submit">
+  <div class="subscribe-status"></div>
+</form>
+<script src="https://mailer.example.com/subscribe.js"></script>
+```
 
 ### Endpoints
 
@@ -345,13 +353,16 @@ sequenceDiagram
 
 ```
 .
+├── package.json                 # Dependencies
 ├── frontend/                    # Frontend source code
+│   ├── locales/                 # Directory with translations
+│   │   └── xliff/*.xlf          # Translation files in XLIFF format
 │   └── dist/                    # Publish directory (generated)
 ├── backend/                     # Serverless backend source code
 │── netlify/functions/           # Netlify functions
 ├── netlify.toml                 # Netlify configuration
-├── package.json                 # Dependencies
 ├── webpack.config.js            # Webpack configuration — used to generate frontend/dist
 ├── tsconfig.json                # TypeScript configuration (frontend & backend)
+├── lit-localize.json            # Translation settings
 └── README.md                    # This file
 ```
