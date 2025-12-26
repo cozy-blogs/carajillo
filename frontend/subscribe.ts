@@ -11,7 +11,7 @@ export async function main() {
   try {
     recaptchaSiteKey = await getCaptchaSiteKey();
     await loadCaptcha(recaptchaSiteKey);
-    await subscribe();
+    await initialize();
   } catch (error) {
     document.querySelectorAll<HTMLElement>(".subscribe-form .subscribe-status").forEach((status) => {
         const message = (error instanceof Error) ? error.message : msg('Something went wrong.');
@@ -29,10 +29,10 @@ function domReady() {
   });
 }
 
-async function subscribe() {
+async function initialize() {
   document.querySelectorAll<HTMLFormElement>(".subscribe-form").forEach(function(form) {
-    //if (new URL(form.action).hostname === "app.loops.so") 
-      loopsSubscribeForm(form);
+    if (new URL(form.action).hostname === new URL(apiRoot).hostname) 
+      setupMailerSubscribeForm(form);
   });
 }
 
@@ -77,7 +77,7 @@ function getCaptchaToken(action: string): Promise<string> {
   });
 }
 
-function loopsSubscribeForm(form: HTMLFormElement) {
+function setupMailerSubscribeForm(form: HTMLFormElement) {
   const status = form.querySelector<HTMLElement>(".subscribe-status");
   form.addEventListener("submit", async function(event) {
     event.preventDefault();
@@ -87,7 +87,7 @@ function loopsSubscribeForm(form: HTMLFormElement) {
     }
 
 
-    const {success, message, email} = await loopsSubscribe(form);
+    const {success, message, email} = await submitSubscription(form);
     if (success && email) {
       form.dataset.status = "successful";
       if (status) {
@@ -117,18 +117,15 @@ function formDataObject(form: HTMLFormElement): Record<string, string> {
   return Object.fromEntries(entries);
 }
 
-// https://loops.so/docs/forms/custom-form
-async function loopsSubscribe(form: HTMLFormElement): Promise<{success: boolean; message: string; email?: string}> {
+async function submitSubscription(form: HTMLFormElement): Promise<{success: boolean; message: string; email?: string}> {
   const data = formDataObject(form);
   data.captcha_token = await getCaptchaToken('subscribe');
 
   try {
-    const response = await fetch(form.action, {
+    const response = await fetch(`${apiRoot}/subscription`, {
       method: "POST",
       body: JSON.stringify(data),
-      //body: new URLSearchParams(new FormData(form)),
       headers: {
-        //"Content-Type": "application/x-www-form-urlencoded",
         "Content-Type": "application/json",
         "Accept": "application/json",
       }
