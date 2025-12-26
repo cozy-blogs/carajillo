@@ -98,4 +98,4 @@ router.post("/honeypot", async (req, res) => {
   res.json({ success: true });
 });
 
-app.use("/api/", corsMiddleware, apiSpecValidator, router, errorMiddleware);
+app.use("/api/", corsMiddleware, express.json(), apiSpecValidator, router, errorMiddleware);
