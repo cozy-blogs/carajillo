@@ -83,7 +83,12 @@ if (process.env.NODE_ENV === "development") {
   });
 }
 
+router.post("/honeypot", async (req, res) => {
+  console.log(`Honeypot request from ${req.ips.join(', ')}: ${req.body}`);
+  res.json({ success: true });
+});
+
 // @todo set headers Cache-Control...
 // @todo use cors https://expressjs.com/en/resources/middleware/cors.html
 
-app.use("/api/", express.json(), apiSpecValidator, router, errorMiddleware);
+app.use("/api/", apiSpecValidator, router, errorMiddleware);

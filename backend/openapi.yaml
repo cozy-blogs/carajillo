@@ -136,7 +136,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestResponse'
+                type: object
+
+  /honeypot:
+    post:
+      summary: Honeypot endpoint
+      operationId: honeypot
+      responses:
+        '200':
+          description: Honeypot request successful
+          content:
+            application/json:
+              schema:
+                type: object
 
 components:
   securitySchemes:
@@ -205,7 +217,6 @@ components:
         captcha_token:
           type: string
           description: CAPTCHA response token from client
-          example: "03AGdBq24..."
         mailing_lists:
           type: array
           items:
@@ -219,6 +230,8 @@ components:
           example: "en"
           minLength: 2
           maxLength: 2
+      additionalProperties:
+        type: string
 
     SubscribeResponse:
       type: object
@@ -258,6 +271,16 @@ components:
           items:
             $ref: '#/components/schemas/MailingListWithSubscription'
           description: List of mailing lists with subscription status
+      additionalProperties: false
+      example:
+        success: true
+        email: "user@example.com"
+        subscribed: true
+        mailingLists:
+          - id: "clx1234567890"
+            name: "Newsletter"
+            description: "Weekly newsletter with updates"
+            subscribed: true
 
     MailingListWithSubscription:
       allOf:
@@ -295,6 +318,7 @@ components:
           example:
             "clx1234567890": true
             "clx0987654321": false
+      additionalProperties: false
 
     UpdateSubscriptionResponse:
       type: object
@@ -313,24 +337,7 @@ components:
         subscribed:
           type: boolean
           example: true
-
-    TestResponse:
-      type: object
-      properties:
-        hostname:
-          type: string
-          example: "example.com"
-        url:
-          type: string
-          example: "/api/test"
-        ip:
-          type: string
-          example: "192.168.1.1"
-        ips:
-          type: array
-          items:
-            type: string
-          example: ["192.168.1.1"]
+      additionalProperties: false
 
     ErrorResponse:
       type: object

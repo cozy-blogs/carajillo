@@ -16,7 +16,7 @@
 * [ ] token refresh
   - [ ] due to server secret rotation
   - [ ] due to token expiration
-* [ ] rename backend subscribe -> subscription
+* [x] rename backend subscribe -> subscription
 * [ ] frontend/subscribe: filter out honeypot elements by display:none (getComputedStyle)
-* [ ] backend/honeypot: form action to catch spammers
+* [x] backend/honeypot: form action to catch spammers
 * [ ] company logo
