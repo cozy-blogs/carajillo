@@ -9,7 +9,6 @@ export const {getLocale, setLocale} = configureLocalization({
   sourceLocale,
   targetLocales,
   loadLocale: async (locale: string): Promise<LocaleModule> => {
-    console.log(`Loading locale ${locale}`);
     switch (locale) {
       case 'pl':
         return pl;
@@ -30,10 +29,8 @@ export function getInitialLocale(): string {
 export async function initializeLocale(): Promise<void> {
   const locale = getInitialLocale();
   if (locale === sourceLocale || targetLocales.includes(locale as any)) {
-    console.log(`Setting locale ${locale}`);
     await setLocale(locale);
   } else {
-    console.warn(`Invalid locale ${locale}, setting default ${sourceLocale}`);
     await setLocale(sourceLocale);
   }
 }
