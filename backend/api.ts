@@ -31,7 +31,7 @@ app.set('query parser', 'simple');
 // Configure CORS to allow cross-origin requests
 // Allow all origins by default, or restrict via CORS_ORIGIN environment variable
 const corsMiddleware = cors({
-  origin: process.env.CORS_ORIGIN || true, // true allows all origins, or specify a string/array
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.trim().split(/\s+/) : true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

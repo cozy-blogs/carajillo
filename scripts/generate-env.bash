@@ -11,14 +11,14 @@ COMPANY_ADDRESS=Company Address
 COMPANY_LOGO=https://example.com/logo.png
 
 # Domains where submission forms may be created (default: all submissions are accepted)
-CORS_ORIGIN=example.com
+CORS_ORIGIN=example.com other.example.com
 
 # Secret key for JWT token signing
 JWT_SECRET=$(dd count=1 ibs=32 if=/dev/random status=none | base64)
 
 # Loops.so API key
 # https://app.loops.so/settings?page=api
-LOOPS_SO_SECRET=$(dd count=1 ibs=32 if=/dev/random status=none | base64)
+LOOPS_SO_SECRET=your-secret-key-here
 
 # CAPTCHA provider (default: `recaptcha`, options: `recaptcha`, `none`)
 CAPTCHA_PROVIDER=recaptcha
