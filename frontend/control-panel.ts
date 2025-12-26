@@ -35,7 +35,7 @@ export class ControlPanel extends LitElement {
   protected token = getToken();
 
   @state()
-  protected data?: SubscriptionStatus;
+  protected subscription?: SubscriptionStatus;
 
   @query('#subscribe')
   private subscribeSwitch?: MdSwitch;
@@ -64,7 +64,6 @@ export class ControlPanel extends LitElement {
   }
 
   protected renderSubscriptionStatus(subscription: SubscriptionStatus) {
-    const data = subscription;
     const status = this.updateSubscriptionTask.render({
       pending: () => html`<md-linear-progress indeterminate></md-linear-progress>`,
       complete: () => html``,
@@ -73,21 +72,20 @@ export class ControlPanel extends LitElement {
 
     // @todo show e-mail, company name
     // @todo use fab https://material-web.dev/components/fab/ for main subscription
-    // @todo label https://material-web.dev/components/switch/#label
     return html`
       <md-list>
         <md-list-item type="button">
-          <div slot="headline">${msg('Subscribe for newsletter')}</div>
+          <div slot="headline"><label for="subscribe">${msg('Subscribe for newsletter')}</label></div>
           <div slot="trailing-supporting-text">
-            <md-switch icons id="subscribe" ?selected=${data.subscribed} @change=${this.onChange}></md-switch>
+            <md-switch icons id="subscribe" ?selected=${subscription.subscribed} @change=${this.onChange}></md-switch>
           </div>
         </md-list-item>
         ${repeat(
-          data.mailingLists,
+          subscription.mailingLists,
           (list) => list.id,
           (list, index) => html`
             <mailer-list-subscription .mailingListId=${list.id} .name=${list.name} .description=${list.description}
-              ?subscribed=${list.subscribed} ?disabled=${!data.subscribed}
+              ?subscribed=${list.subscribed} ?disabled=${!subscription.subscribed}
               @change=${this.onChange}>
             </mailer-list-subscription>`
         )}
@@ -108,8 +106,9 @@ export class ControlPanel extends LitElement {
         throw new Error(`HTTP ${response.status}`);
       }
       // @todo handle token refresh
-      this.data = await response.json() as SubscriptionStatus;
-      return this.data;
+      this.subscription = await response.json() as SubscriptionStatus;
+      console.debug('initial subscription', this.subscription);
+      return this.subscription;
     },
     args: () => [this.token]
   });
@@ -119,15 +118,20 @@ export class ControlPanel extends LitElement {
       if (token === undefined) {
         throw new Error(msg('Missing authorization token'));
       }
-      if (this.data === undefined)
+      if (this.subscription === undefined)
         return;
       
-      const email = this.data.email;
+      const email = this.subscription.email;
       const subscribe : boolean = this.subscribeSwitch?.selected || false;
       const mailingLists : Record<string, boolean> = {};
       this.mailingListItems?.forEach((list) => {
-        mailingLists[list.id] = list.subscribed;
+        mailingLists[list.mailingListId!] = list.subscribed;
       })
+      this.subscription.subscribed = subscribe;
+      this.subscription.mailingLists.forEach((list) => {
+        list.subscribed = mailingLists[list.id];
+      });
+      console.debug('subscription', this.subscription);
 
       const request : UpdateSubscriptionRequest = {email, subscribe, mailingLists};
       try {
@@ -143,16 +147,11 @@ export class ControlPanel extends LitElement {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-
-        this.data.subscribed = subscribe;
-        this.data.mailingLists.forEach((list) => {
-          list.subscribed = mailingLists[list.id];
-        });
       } catch (error) {
         this.dispatchEvent(new CustomEvent('error', {detail: {error}}));
       }
     },
-    args: () => [this.data, this.token],
+    args: () => [this.subscription, this.token],
     autoRun: false,
   });
 

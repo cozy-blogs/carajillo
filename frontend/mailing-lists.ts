@@ -31,10 +31,10 @@ export class ListSubscription extends LitElement {
     return html`
       <md-list-item type="button">
         <md-icon slot="start">label</md-icon>
-        <div slot="headline">${this.name}</div>
-        <div slot="supporting-text">${this.description}</div>
+        <div slot="headline"><label for=${this.mailingListId}>${this.name}</label></div>
+        <div slot="supporting-text"><label for=${this.mailingListId}>${this.description}</label></div>
         <div slot="trailing-supporting-text">
-          <md-switch icons ?selected=${this.subscribed} ?disabled=${this.disabled} @change=${this.onChange}></md-switch>
+          <md-switch icons id=${this.mailingListId} ?selected=${this.subscribed} ?disabled=${this.disabled} @change=${this.onChange}></md-switch>
         </div>
       </md-list-item>
     `;
