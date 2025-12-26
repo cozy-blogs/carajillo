@@ -1,14 +1,14 @@
 
 import express, { Router } from "express";
+import cors from "cors";
 import { middleware as errorMiddleware, HttpError } from "./error";
 import { middleware as openApiValidator } from "express-openapi-validator";
-
+import { openApiSpec } from "./openapi-spec";
 import { authenticate } from "./jwt";
 import { subscribe, getSubscription, updateSubscription } from "./subscription"
 import type { SubscribeRequest, UpdateSubscriptionRequest } from "./subscription";
 import { getMailingLists } from "./loops";
 import { configuration as captchaConfiguration } from "./recaptcha";
-import { openApiSpec } from "./openapi-spec";
 
 export const app = express();
 
@@ -27,6 +27,16 @@ app.set('trust proxy', true);
 
 // Parse strings as simple key-value pairs.
 app.set('query parser', 'simple');
+
+// Configure CORS to allow cross-origin requests
+// Allow all origins by default, or restrict via CORS_ORIGIN environment variable
+const corsMiddleware = cors({
+  origin: process.env.CORS_ORIGIN || true, // true allows all origins, or specify a string/array
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Type'],
+});
 
 const apiSpecValidator = openApiValidator({
   apiSpec: openApiSpec,
@@ -88,7 +98,4 @@ router.post("/honeypot", async (req, res) => {
   res.json({ success: true });
 });
 
-// @todo set headers Cache-Control...
-// @todo use cors https://expressjs.com/en/resources/middleware/cors.html
-
-app.use("/api/", apiSpecValidator, router, errorMiddleware);
+app.use("/api/", corsMiddleware, apiSpecValidator, router, errorMiddleware);

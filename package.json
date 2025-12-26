@@ -25,6 +25,7 @@
     "@material/web": "^2.4.1",
     "@netlify/functions": "^5.1.1",
     "@types/express": "^4.17.25",
+    "cors": "^2.8.5",
     "express": "^5.2.1",
     "express-openapi-validator": "^5.6.0",
     "jsonwebtoken": "^9.0.3",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@lit/localize-tools": "^0.8.1",
+    "@types/cors": "^2.8.19",
     "@types/js-yaml": "^4.0.9",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.2",
