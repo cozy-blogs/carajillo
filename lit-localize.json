@@ -11,6 +11,6 @@
   },
   "interchange": {
     "format": "xliff",
-    "xliffDir": "./frontend/locales/xliff"
+    "xliffDir": "./translation"
   }
 }

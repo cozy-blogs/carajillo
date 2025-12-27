@@ -23,5 +23,5 @@
 * [x] referer
 * [ ] autosubscribe using visibilityState/visibilitychange event
 * [ ] confetti https://www.npmjs.com/package/js-confetti or https://confettijs.org/
-* [ ] move xliff, remove generated translation from repo
+* [x] move xliff, remove generated translation from repo
 * [ ] automatic tests

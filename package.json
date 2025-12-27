@@ -8,6 +8,7 @@
     "build:localize": "lit-localize build",
     "build:openapi": "node scripts/generate-openapi-spec.js",
     "dev": "netlify dev -c 'webpack --watch'",
+    "dev:localize": "lit-localize extract",
     "check": "tsc --noEmit"
   },
   "keywords": [

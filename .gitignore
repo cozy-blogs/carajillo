@@ -6,6 +6,7 @@ yarn.lock
 *.js.map
 *.d.ts.map
 frontend/dist/
+frontend/locales/
 backend/openapi-spec.ts
 
 # Environment variables
