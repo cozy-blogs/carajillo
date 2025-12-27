@@ -97,6 +97,7 @@ Mailer will try to find right translation by email name.
   <input type="hidden" name="language" value="en">
   <input type="submit" value="Submit">
   <div class="subscribe-status"></div>
+  <noscript><p>Enable Javascript in your browser to subscribe.</p></noscript>
 </form>
 <script src="https://mailer.example.com/subscribe.js"></script>
 ```
