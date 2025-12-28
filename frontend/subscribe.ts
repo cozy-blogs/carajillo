@@ -32,8 +32,10 @@ function domReady() {
 async function initialize() {
   document.querySelectorAll<HTMLFormElement>(".subscribe-form").forEach(function(form) {
     // @todo allow honeypot on different domain
-    if (new URL(form.action).hostname === new URL(apiRoot).hostname) 
+    if (new URL(form.action).hostname === new URL(apiRoot).hostname) {
+      console.debug('setupMailerSubscribeForm', form);
       setupMailerSubscribeForm(form);
+    }
   });
 }
 
