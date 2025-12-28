@@ -32,7 +32,7 @@ export class ControlPanel extends LitElement {
   public autosubscribe?: boolean;
 
   @provide({context: tokenContext})
-  protected token = getToken();
+  protected token: string | undefined = getToken();
 
   @state()
   protected company?: Company;
@@ -87,13 +87,26 @@ export class ControlPanel extends LitElement {
       background-color: var(--md-sys-color-surface);
     }
     .container {
-      width: 20rem;
+      box-sizing: border-box;
+      height: 100vh;
       padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: stretch;
+      justify-content: center;
       gap: 1rem;
-      border: 1px solid var(--md-sys-color-outline-variant);
+    }
+    @media (min-width: 600px) {
+      .container {
+        width: 500px;
+        height: fit-content;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        border-radius: 1rem;
+      }
+    }
+
+    .update-status {
+      min-height: var(--md-linear-progress-active-indicator-height, 4px);
     }
   `;
 
@@ -109,8 +122,10 @@ export class ControlPanel extends LitElement {
         return html`
           <div class="container">  
             <mailer-company .company=${company}></mailer-company>
+            <div class="update-status">
+              ${updateStatus}
+            </div>
             ${this.renderSubscriptionStatus(company, subscription)}
-            ${updateStatus}
           </div>`;
       },
       error: (error) => html`<mailer-status-message><md-icon slot="icon">error</md-icon>${String(error)}</mailer-status-message>`
@@ -232,7 +247,8 @@ export class StatusMessage extends LitElement {
       display: flex;
       flex-direction: row;
       gap: 1rem;
-      padding: 1rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
     }
   `;
 

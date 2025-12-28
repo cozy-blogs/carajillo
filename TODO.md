@@ -17,7 +17,6 @@
   - [ ] due to server secret rotation
   - [ ] due to token expiration
 * [x] rename backend subscribe -> subscription
-* [ ] frontend/subscribe: filter out honeypot elements by display:none (getComputedStyle)
 * [x] backend/honeypot: form action to catch spammers
 * [x] company info, logo
 * [x] referer
@@ -29,6 +28,7 @@
 * [ ] update name in control panel
 * [ ] error handling - functions to create errors, http headers
 * [ ] rename 'caffè corretto/carajillo'? move to github
+* [ ] optimize assets
 
 # external
 * [ ] honeypot service
