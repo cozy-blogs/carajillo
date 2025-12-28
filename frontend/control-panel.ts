@@ -1,17 +1,30 @@
+// material components
+import '@material/web/icon/icon';
+import '@material/web/button/filled-button';
+import '@material/web/button/outlined-button';
+import '@material/web/progress/linear-progress';
+import '@material/web/progress/circular-progress';
+import '@material/web/icon/icon';
 
-import '@material/web/all.js'; // @todo minimize imports
+// custom components
 import './mailing-lists';
 import './company';
-import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { provide } from '@lit/context';
-import { Task } from '@lit/task';
-import { msg } from '@lit/localize';
+
+// application
 import { apiRoot, tokenContext } from './context';
 import { initializeLocale } from './localize';
 import { SubscriptionChangeEvent } from './mailing-lists';
 import type { SubscriptionStatus, UpdateSubscriptionRequest } from '../backend/subscription';
 import type { Company } from './company';
+
+// lit
+import { LitElement, html, css } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import { provide } from '@lit/context';
+import { Task } from '@lit/task';
+import { msg } from '@lit/localize';
+
+// other third-party
 import JSConfetti from 'js-confetti';
 
 function getToken(): string | undefined {

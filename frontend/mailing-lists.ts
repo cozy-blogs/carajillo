@@ -1,11 +1,20 @@
+// material components
+import '@material/web/list/list';
+import '@material/web/list/list-item';
+import '@material/web/divider/divider';
+import '@material/web/switch/switch';
+import '@material/web/icon/icon';
+import type { MdSwitch } from '@material/web/switch/switch';
 
+// lit
 import { LitElement, html, css } from 'lit';
 import { repeat } from 'lit/directives/repeat.js';
 import { customElement, property } from 'lit/decorators.js';
 import { msg } from '@lit/localize';
-import { MdSwitch } from '@material/web/switch/switch';
-import '@material/web/icon/icon';
+
+// application
 import type { MailingList } from '../backend/subscription';
+
 
 @customElement('mailer-mailing-lists')
 export class MailingLists extends LitElement {
