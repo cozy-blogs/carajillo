@@ -21,7 +21,7 @@
 * [x] backend/honeypot: form action to catch spammers
 * [x] company info, logo
 * [x] referer
-* [ ] autosubscribe using visibilityState/visibilitychange event
+* [x] autosubscribe using visibilityState/visibilitychange event
 * [ ] confetti https://www.npmjs.com/package/js-confetti or https://confettijs.org/
 * [x] move xliff, remove generated translation from repo
 * [ ] automatic tests

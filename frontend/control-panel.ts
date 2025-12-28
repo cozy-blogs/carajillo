@@ -12,6 +12,7 @@ import { initializeLocale } from './localize';
 import { SubscriptionChangeEvent } from './mailing-lists';
 import type { SubscriptionStatus, UpdateSubscriptionRequest } from '../backend/subscription';
 import type { Company } from './company';
+import JSConfetti from 'js-confetti';
 
 function getToken(): string | undefined {
   const queryParams = new URLSearchParams(window.location.search);
@@ -25,9 +26,10 @@ function getToken(): string | undefined {
 
 @customElement('mailer-control-panel')
 export class ControlPanel extends LitElement {
+  private confetti = new JSConfetti();
 
   @property({type: Boolean})
-  public autosubscribe?: boolean = true;
+  public autosubscribe?: boolean;
 
   @provide({context: tokenContext})
   protected token = getToken();
@@ -41,6 +43,15 @@ export class ControlPanel extends LitElement {
   public async connectedCallback() {
     super.connectedCallback();
     await initializeLocale();
+    if (window.document.visibilityState === 'visible') {
+      this.handleAutosubscribe();
+    }
+    window.addEventListener('visibilitychange', this.handleAutosubscribe.bind(this));
+  }
+
+  public disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('visibilitychange', this.handleAutosubscribe.bind(this));
   }
 
   protected get useMailingLists(): boolean {
@@ -48,9 +59,6 @@ export class ControlPanel extends LitElement {
   }
 
   // @todo update name?
-
-  // @todo autosubscribe
-  // https://lit.dev/docs/components/events/#adding-event-listeners-to-other-elements
 
   static styles = css`
     :host {
@@ -65,6 +73,7 @@ export class ControlPanel extends LitElement {
       flex-direction: column;
       align-items: stretch;
       gap: 1rem;
+      border: 1px solid var(--md-sys-color-outline-variant);
     }
   `;
 
@@ -133,6 +142,7 @@ export class ControlPanel extends LitElement {
       this.company = await companyResponse.json() as Company;
 
       this.subscription = await subscriptionResponse.json() as SubscriptionStatus;
+      this.handleAutosubscribe();
 
       return [this.company, this.subscription];
     },
@@ -161,6 +171,12 @@ export class ControlPanel extends LitElement {
         throw new Error(msg('Failed to update subscription'));
       }
 
+      if (this.subscription.optInStatus === 'pending' && update.subscribe) {
+        this.confetti.addConfetti({
+          emojis: ['🎉', '🎊', '🦄', '🎁', '✉️']
+        });
+      }
+
       this.subscription.subscribed = update.subscribe;
       this.subscription.optInStatus = update.subscribe ? 'accepted' : 'rejected';
       if (update.mailingLists !== undefined) {
@@ -172,6 +188,16 @@ export class ControlPanel extends LitElement {
     },
     autoRun: false,
   });
+
+  private handleAutosubscribe() {
+    console.info('handleAutosubscribe', window.document.visibilityState, this.autosubscribe, this.subscription?.optInStatus);
+    if (window.document.visibilityState === 'visible' && this.autosubscribe && this.subscription?.optInStatus === 'pending') {
+      this.updateSubscriptionTask.run([{
+        email: this.subscription!.email,
+        subscribe: true,
+      }]);
+    }
+  }
 
   private onSubscribe() {
     this.updateSubscriptionTask.run([{
