@@ -107,11 +107,18 @@ function setupMailerSubscribeForm(form: HTMLFormElement) {
   });
 }
 
-function formDataObject(form: HTMLFormElement): Record<string, string> {
+function formDataObject(form: HTMLFormElement): Record<string, string | string[]> {
   const formData = new FormData(form);
-  const entries: [string, string][] = [];
+  const entries: [string, string | string[]][] = [];
   formData.forEach((value, key) => {
-    if (typeof value === 'string') {
+    if (typeof value !== 'string') {
+      return; // skip blobs (files)
+    } else if (key === 'mailingLists') {
+      const mailingLists = value.split(',').map(list => list.trim()).filter(list => list !== '');
+      if (mailingLists.length > 0) {
+        entries.push(['mailingLists', mailingLists]);
+      }
+    } else {
       entries.push([key, value]);
     }
   });
@@ -120,7 +127,7 @@ function formDataObject(form: HTMLFormElement): Record<string, string> {
 
 async function submitSubscription(form: HTMLFormElement): Promise<{success: boolean; message: string; email?: string}> {
   const data = formDataObject(form);
-  data.captcha_token = await getCaptchaToken('subscribe');
+  data.captchaToken = await getCaptchaToken('subscribe');
 
   try {
     const response = await fetch(`${apiRoot}/subscription`, {

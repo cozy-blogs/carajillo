@@ -10,8 +10,8 @@ const rootUrl = process.env.URL;
 export type SubscribeRequest = {
   email : string;
   language?: string;
-  captcha_token: string;
-  mailing_lists: string[];
+  captchaToken: string;
+  mailingLists: string[];
   referer?: string;
 } & Record<string, string>;
 
@@ -29,9 +29,9 @@ export async function subscribe(request: SubscribeRequest) {
   }
   /// @todo make captcha_token optional
 
-  const {email, mailing_lists, captcha_token, ...properties} = request;
+  const {email, mailingLists, captchaToken, ...properties} = request;
 
-  const valid = verifyCaptcha('subscribe', captcha_token);
+  const valid = verifyCaptcha('subscribe', captchaToken);
   if (!valid) {
     throw new HttpError({
       statusCode: 429,
@@ -40,7 +40,7 @@ export async function subscribe(request: SubscribeRequest) {
     });
   }
 
-  const contact = await upsertContact(email, properties, mailing_lists);
+  const contact = await upsertContact(email, properties, mailingLists);
   if (contact.optInStatus == 'rejected') {
     throw new HttpError({
       statusCode: 429,
@@ -49,7 +49,7 @@ export async function subscribe(request: SubscribeRequest) {
     });
   } else if (contact.optInStatus == 'accepted') {
     console.info(`Contact already subscribed: ${contact.email}`);
-    if (mailing_lists.every((requestedMailingList) => contact.mailingLists[requestedMailingList]))
+    if (mailingLists.every((requestedMailingList) => contact.mailingLists[requestedMailingList]))
     {
       console.info('Already subscribed for all requested mailing lists - do not send e-mail');
       return {success: true, doubleOptIn: true, email};

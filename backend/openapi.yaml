@@ -245,21 +245,21 @@ components:
       type: object
       required:
         - email
-        - captcha_token
+        - captchaToken
       properties:
         email:
           type: string
           format: email
           description: Email address to subscribe
           example: "user@example.com"
-        captcha_token:
+        captchaToken:
           type: string
           description: CAPTCHA response token from client
-        mailing_lists:
+        mailingLists:
           type: array
           items:
             type: string
-          description: Array of mailing list IDs to subscribe to (optional, defaults to empty array)
+          description: Array of mailing list IDs to subscribe to (optional, defaults to subscribe to all mailing lists)
           default: []
           example: ["clx1234567890", "clx0987654321"]
         language:

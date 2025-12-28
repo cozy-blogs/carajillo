@@ -108,15 +108,18 @@ function getDoubleOptInStatus(contact: LoopsContact): DoubleOptInStatus {
 
 /**
  * Create or update contact.
- * @param email            Contact e-mail address 
- * @param properties       Extra contact properties (firstName, lastName, userGroup etc.)
- * @param mailingListsIds  Initial mailing list
+ * @param email           Contact e-mail address 
+ * @param properties      Extra contact properties (firstName, lastName, userGroup etc.)
+ * @param mailingListIds  Initial mailing list IDs (optional, defaults to all publicly available mailing lists)
  * @see https://loops.so/docs/api-reference/create-contact
  */
-export async function upsertContact(email: string, properties: ContactProperties, mailingListsIds: string[]): Promise<Contact> {
+export async function upsertContact(email: string, properties: ContactProperties, mailingListIds?: string[]): Promise<Contact> {
   const contact = await findContact(email);
   if (contact === null) {
-    const mailingLists = Object.fromEntries(mailingListsIds.map(listId => [listId, true]));
+    if (mailingListIds === undefined || mailingListIds.length === 0) {
+      mailingListIds = await getMailingLists().then(lists => lists.map(list => list.id));
+    }
+    const mailingLists = Object.fromEntries(mailingListIds!.map(listId => [listId, true]));
     const createResponse = await loops.createContact({
       email,
       properties: {

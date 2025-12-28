@@ -28,3 +28,7 @@
 * [ ] handle initial mailing list in form
 * [ ] update name in control panel
 * [ ] error handling - functions to create errors, http headers
+* [ ] rename 'caffè corretto/carajillo'? move to github
+
+# external
+* [ ] honeypot service

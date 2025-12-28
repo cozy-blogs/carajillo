@@ -94,6 +94,7 @@ Mailer will try to find right translation by email name.
 <form class="subscription-form" action="https://mailer.example.com/api/honeypot">
   <input type="text" name="firstName" placeholder="Name">
   <input type="email" name="email" placeholder="Email" required>
+  <input type="hidden" name="mailingLists" value="comma, delimited, mailigListIds">
   <input type="hidden" name="language" value="en">
   <input type="submit" value="Submit">
   <div class="subscribe-status"></div>
