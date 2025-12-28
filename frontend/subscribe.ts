@@ -30,11 +30,9 @@ function domReady() {
 }
 
 async function initialize() {
-  console.debug('initialize', document.readyState);
   document.querySelectorAll<HTMLFormElement>(".subscribe-form").forEach(function(form) {
     // @todo allow honeypot on different domain
     if (new URL(form.action).hostname === new URL(apiRoot).hostname) {
-      console.debug('setupMailerSubscribeForm', form);
       setupMailerSubscribeForm(form);
     }
   });
@@ -82,6 +80,12 @@ function getCaptchaToken(action: string): Promise<string> {
 }
 
 function setupMailerSubscribeForm(form: HTMLFormElement) {
+  if (form.dataset.initialized) {
+    console.debug('form already initialized', form);
+    return;
+  }
+  form.dataset.initialized = 'initialized';
+
   const status = form.querySelector<HTMLElement>(".subscribe-status");
   form.addEventListener("submit", async function(event) {
     event.preventDefault();
