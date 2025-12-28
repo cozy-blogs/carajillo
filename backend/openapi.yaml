@@ -325,6 +325,11 @@ components:
           items:
             $ref: '#/components/schemas/MailingListWithSubscription'
           description: List of mailing lists with subscription status
+        referer:
+          type: string
+          format: uri
+          description: The URL of the page from which the subscription request was made
+          example: "https://example.com/newsletter"
       additionalProperties: false
       example:
         success: true

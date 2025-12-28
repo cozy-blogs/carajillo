@@ -68,6 +68,14 @@ export class ControlPanel extends LitElement {
     }]);
   }
 
+  public close() {
+    if (this.subscription?.referer) {
+      window.location.href = this.subscription.referer;
+    } else {
+      window.location.href = `https://google.com/`;
+    }
+  }
+
   protected onMailingListChange(e: SubscriptionChangeEvent) {
     this.updateSubscriptionTask.run([{
       email: this.subscription!.email,
@@ -126,6 +134,7 @@ export class ControlPanel extends LitElement {
               ${updateStatus}
             </div>
             ${this.renderSubscriptionStatus(company, subscription)}
+            ${subscription.referer ? html`<md-filled-button @click=${this.close}>${msg('Close')}<md-icon slot="icon">close</md-icon></md-filled-button>` : html``}
           </div>`;
       },
       error: (error) => html`<mailer-status-message><md-icon slot="icon">error</md-icon>${String(error)}</mailer-status-message>`

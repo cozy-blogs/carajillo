@@ -92,6 +92,7 @@ export interface SubscriptionStatus {
   subscribed: boolean;
   optInStatus: 'accepted' | 'rejected' | 'pending' | null;
   mailingLists: MailingList[];
+  referer?: string;
 }
 
 export async function getSubscription(email: string): Promise<SubscriptionStatus> {
@@ -108,7 +109,8 @@ export async function getSubscription(email: string): Promise<SubscriptionStatus
     mailingLists: availableMailingLists.map((list) => ({
       subscribed: contact.mailingLists[list.id] || false,
       ...list
-    }))
+    })),
+    referer: contact.referer
   };
 }
 

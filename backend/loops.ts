@@ -67,6 +67,10 @@ export interface Contact {
    * @see https://loops.so/docs/contacts/double-opt-in
    */
   optInStatus: DoubleOptInStatus;
+  /**
+   * The URL of the page from which the subscription request was made.
+   */
+  referer?: string;
 }
 
 type MailingLists = Record<string, boolean>;
