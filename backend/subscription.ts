@@ -52,7 +52,7 @@ export async function subscribe(request: SubscribeRequest) {
     if (mailing_lists.every((requestedMailingList) => contact.mailingLists[requestedMailingList]))
     {
       console.info('Already subscribed for all requested mailing lists - do not send e-mail');
-      return {success: true, double_opt_in: true, email};
+      return {success: true, doubleOptIn: true, email};
     }
   }
 
@@ -63,7 +63,7 @@ export async function subscribe(request: SubscribeRequest) {
   }
   await sendConfirmationMail(contact.email, `${rootUrl}/control-panel?${params}`, properties.language);
 
-  return {success: true, double_opt_in: true, email};
+  return {success: true, doubleOptIn: true, email};
 }
 
 
@@ -90,6 +90,7 @@ export interface SubscriptionStatus {
   success: true;
   email: string;
   subscribed: boolean;
+  optInStatus: 'accepted' | 'rejected' | 'pending' | null;
   mailingLists: MailingList[];
 }
 
@@ -103,6 +104,7 @@ export async function getSubscription(email: string): Promise<SubscriptionStatus
     success: true,
     email: contact.email,
     subscribed: contact.subscribed,
+    optInStatus: contact.optInStatus,
     mailingLists: availableMailingLists.map((list) => ({
       subscribed: contact.mailingLists[list.id] || false,
       ...list
@@ -124,7 +126,7 @@ export interface UpdateSubscriptionRequest {
    * Individual mailing list subscription.
    * @see https://loops.so/docs/contacts/mailing-lists
    */
-  mailingLists: Record<string, boolean>;
+  mailingLists?: Record<string, boolean>;
 }
 
 export async function updateSubscription({email, subscribe, mailingLists}: UpdateSubscriptionRequest) {

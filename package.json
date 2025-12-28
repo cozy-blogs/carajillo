@@ -18,7 +18,7 @@
     "mail"
   ],
   "author": "Łukasz Cieśnik",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "@lit/context": "^1.1.6",
     "@lit/localize": "^0.12.2",

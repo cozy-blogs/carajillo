@@ -19,7 +19,7 @@
 * [x] rename backend subscribe -> subscription
 * [ ] frontend/subscribe: filter out honeypot elements by display:none (getComputedStyle)
 * [x] backend/honeypot: form action to catch spammers
-* [ ] company info, logo
+* [x] company info, logo
 * [x] referer
 * [ ] autosubscribe using visibilityState/visibilitychange event
 * [ ] confetti https://www.npmjs.com/package/js-confetti or https://confettijs.org/

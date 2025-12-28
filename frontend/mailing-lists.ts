@@ -1,8 +1,37 @@
 
 import { LitElement, html, css } from 'lit';
+import { repeat } from 'lit/directives/repeat.js';
 import { customElement, property } from 'lit/decorators.js';
+import { msg } from '@lit/localize';
 import { MdSwitch } from '@material/web/switch/switch';
 import '@material/web/icon/icon';
+import type { MailingList } from '../backend/subscription';
+
+@customElement('mailer-mailing-lists')
+export class MailingLists extends LitElement {
+
+  @property({type: Object, attribute: false})
+  public mailingLists?: MailingList[];
+
+  @property({type: Boolean})
+  public disabled: boolean = false;
+
+  protected render() {
+    return html`
+      <md-list>
+        <md-list-item type="text">${msg('Choose what you are interested in:')}</md-list-item>
+        <md-divider></md-divider>
+        ${repeat(
+          this.mailingLists ?? [],
+          (list) => list.id,
+          (list, index) => html`
+            <mailer-list-subscription .mailingListId=${list.id} .name=${list.name} .description=${list.description}
+              ?subscribed=${list.subscribed} ?disabled=${this.disabled}>
+            </mailer-list-subscription>`
+        )}
+      </md-list>`;
+  }
+}
 
 @customElement('mailer-list-subscription')
 export class ListSubscription extends LitElement {
@@ -43,16 +72,16 @@ export class ListSubscription extends LitElement {
   private onChange(e: Event) {
     const subscribe = (e.target as MdSwitch).selected;
     this.subscribed = subscribe;
-    this.dispatchEvent(new SubscriptionChangeEvent(this.mailingListId, subscribe));
+    this.dispatchEvent(new SubscriptionChangeEvent(this.mailingListId!, subscribe));
   }
 }
 
 export class SubscriptionChangeEvent extends Event {
   subscribe: boolean;
-  mailingListId?: string;
+  mailingListId: string;
 
-  constructor(mailingListId: string | undefined, subscribe: boolean) {
-    super('change');
+  constructor(mailingListId: string, subscribe: boolean) {
+    super('change', {bubbles: true, composed: true});
     this.mailingListId = mailingListId;
     this.subscribe = subscribe;
   }

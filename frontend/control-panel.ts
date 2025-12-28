@@ -1,7 +1,8 @@
 
 import '@material/web/all.js'; // @todo minimize imports
 import './mailing-lists';
-import { LitElement, html } from 'lit';
+import './company';
+import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { provide } from '@lit/context';
 import { Task } from '@lit/task';
@@ -12,8 +13,9 @@ import { queryAll } from 'lit/decorators/query-all.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { apiRoot, tokenContext } from './context';
 import { initializeLocale } from './localize';
-import { ListSubscription } from './mailing-lists';
+import { ListSubscription, SubscriptionChangeEvent } from './mailing-lists';
 import type { SubscriptionStatus, UpdateSubscriptionRequest } from '../backend/subscription';
+import type { Company } from './company';
 
 function getToken(): string | undefined {
   const queryParams = new URLSearchParams(window.location.search);
@@ -35,10 +37,10 @@ export class ControlPanel extends LitElement {
   protected token = getToken();
 
   @state()
-  protected subscription?: SubscriptionStatus;
+  protected company?: Company;
 
-  @query('#subscribe')
-  private subscribeSwitch?: MdSwitch;
+  @state()
+  protected subscription?: SubscriptionStatus;
 
   @queryAll('mailer-list-subscription')
   private mailingListItems?: NodeListOf<ListSubscription>;
@@ -57,52 +59,53 @@ export class ControlPanel extends LitElement {
   // @todo autosubscribe
   // https://lit.dev/docs/components/events/#adding-event-listeners-to-other-elements
 
+  static styles = css`
+    :host {
+      font-family: var(--md-sys-typeface-plain);
+      color: var(--md-sys-color-on-surface);
+      background-color: var(--md-sys-color-surface);
+    }
+  `;
+
   protected render() {
     return this.fetchSubscriptionTask.render({
       pending: () => html`<md-circular-progress four-color indeterminate></md-circular-progress>`,
-      complete: (status) => {
-        return this.renderSubscriptionStatus(status);
+      complete: ([company, subscription]) => {
+        return this.renderSubscriptionStatus(company, subscription);
       },
       error: (error) => html`<md-suggestion-chip><md-icon slot="icon">error</md-icon>${String(error)}</md-suggestion-chip>`
     });
   }
 
-  protected renderSubscriptionStatus(subscription: SubscriptionStatus) {
-    const status = this.updateSubscriptionTask.render({
+  protected renderSubscriptionStatus(company: Company, subscription: SubscriptionStatus) {
+    const updateStatus = this.updateSubscriptionTask.render({
       pending: () => html`<md-linear-progress indeterminate></md-linear-progress>`,
       complete: () => html``,
       error: (error) => html`<md-suggestion-chip><md-icon slot="icon">error</md-icon>${String(error)}</md-suggestion-chip>`
     })
 
-      // <md-filled-button>${msg('Subscribe')}<md-icon slot="icon">mail</md-icon></md-filled-button>
-      // <md-outlined-button>${msg('Unsubscribe')}<md-icon slot="icon">unsubscribe</md-icon></md-outlined-button>
+    const subscribed = subscription.optInStatus === 'accepted';
 
-    // @todo show e-mail, company name, company logo
-    return html`
-      <md-list>
-        <md-list-item type="button">
-          <md-icon slot="start">mail</md-icon>
-          <div slot="headline"><label for="subscribe">${msg('Subscribe for newsletter')}</label></div>
-          <div slot="end">
-            <md-switch icons id="subscribe" ?selected=${subscription.subscribed} @change=${this.onChange}></md-switch>
-          </div>
-        </md-list-item>
-        ${this.useMailingLists ? html`
-          <md-divider></md-divider>
-          <md-list-item>${msg('Choose what you are interested in:')}</md-list-item>
-          <md-divider></md-divider>
-          ` : html``}
-        ${repeat(
-          subscription.mailingLists,
-          (list) => list.id,
-          (list, index) => html`
-            <mailer-list-subscription .mailingListId=${list.id} .name=${list.name} .description=${list.description}
-              ?subscribed=${list.subscribed} ?disabled=${!subscription.subscribed}
-              @change=${this.onChange}>
-            </mailer-list-subscription>`
-        )}
-      </md-list>
-      ${status}`;
+    if (subscribed) {
+      return html`
+        <mailer-company .company=${company}></mailer-company>
+        <p>${msg('Your subscription has been confirmed.')}</p>
+        ${subscription.mailingLists?.length > 0
+           ? html`<mailer-mailing-lists
+           .mailingLists=${subscription.mailingLists}
+           ?disabled=${!subscription.subscribed}
+           @change=${this.onMailingListChange}></mailer-mailing-lists>` : html``}
+        <p>${msg('You may now close this window.')}</p>
+       <md-outlined-button @click=${this.onUnsubscribe}>${msg('Unsubscribe')}<md-icon slot="icon">unsubscribe</md-icon></md-outlined-button>
+       ${updateStatus}
+      `;
+    } else {
+      return html`
+        <mailer-company .company=${company}></mailer-company>
+        <md-filled-button @click=${this.onSubscribe}>${msg('Subscribe')}<md-icon slot="icon">mail</md-icon></md-filled-button>
+        ${updateStatus}
+      `;
+    }
   }
 
   private fetchSubscriptionTask = new Task(this, {
@@ -110,64 +113,84 @@ export class ControlPanel extends LitElement {
       if (token === undefined) {
         throw new Error(msg('Missing authorization token'));
       }
-      const response = await fetch(`${apiRoot}/subscription`, {
-        headers: {Authorization: `Bearer ${token}`},
-        signal
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      const [companyResponse, subscriptionResponse] = await Promise.all([
+        fetch(`${apiRoot}/company`, {
+          headers: {Authorization: `Bearer ${token}`},
+          signal
+        }), fetch(`${apiRoot}/subscription`, {
+          headers: {Authorization: `Bearer ${token}`},
+          signal
+        })
+      ]);
+      if (!companyResponse.ok) {
+        throw new Error(msg('Failed to fetch company information'));
       }
-      // @todo handle token refresh
-      this.subscription = await response.json() as SubscriptionStatus;
-      console.debug('initial subscription', this.subscription);
-      return this.subscription;
+      if (!subscriptionResponse.ok) {
+        // @todo handle token refresh
+        throw new Error(msg('Failed to fetch subscription status'));
+      }
+      this.company = await companyResponse.json() as Company;
+
+      this.subscription = await subscriptionResponse.json() as SubscriptionStatus;
+
+      return [this.company, this.subscription];
     },
     args: () => [this.token]
   });
   
-  private updateSubscriptionTask = new Task(this, {
-    task: async ([data, token], {signal}) => {
-      if (token === undefined) {
+  private updateSubscriptionTask = new Task<[UpdateSubscriptionRequest], void>(this, {
+    task: async ([update], {signal}) => {
+      if (this.token === undefined) {
         throw new Error(msg('Missing authorization token'));
       }
       if (this.subscription === undefined)
-        return;
+        throw new Error(msg('Subscription not found'));
       
-      const email = this.subscription.email;
-      const subscribe : boolean = this.subscribeSwitch?.selected || false;
-      const mailingLists : Record<string, boolean> = {};
-      this.mailingListItems?.forEach((list) => {
-        mailingLists[list.mailingListId!] = list.subscribed;
-      })
-      this.subscription.subscribed = subscribe;
-      this.subscription.mailingLists.forEach((list) => {
-        list.subscribed = mailingLists[list.id];
+      const response = await fetch(`${apiRoot}/subscription`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify(update),
+        signal
       });
-      console.debug('subscription', this.subscription);
-
-      const request : UpdateSubscriptionRequest = {email, subscribe, mailingLists};
-      try {
-        const response = await fetch(`${apiRoot}/subscription`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json; charset=utf-8',
-          },
-          body: JSON.stringify(request)
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-      } catch (error) {
-        this.dispatchEvent(new CustomEvent('error', {detail: {error}}));
+      if (!response.ok) {
+        throw new Error(msg('Failed to update subscription'));
       }
+
+      this.subscription.subscribed = update.subscribe;
+      this.subscription.optInStatus = update.subscribe ? 'accepted' : 'rejected';
+      if (update.mailingLists !== undefined) {
+        Object.entries(update.mailingLists).forEach(([listId, subscribed]) => {
+          this.subscription!.mailingLists.find((list) => list.id === listId)!.subscribed = subscribed;
+        });
+      }
+      this.requestUpdate();
     },
-    args: () => [this.subscription, this.token],
     autoRun: false,
   });
 
-  private async onChange(e: Event) {
-    this.updateSubscriptionTask.run();
+  private onSubscribe() {
+    this.updateSubscriptionTask.run([{
+      email: this.subscription!.email,
+      subscribe: true,
+    }]);
+  }
+
+  private onUnsubscribe() {
+    this.updateSubscriptionTask.run([{
+      email: this.subscription!.email,
+      subscribe: false,
+    }]);
+  }
+
+  private onMailingListChange(e: SubscriptionChangeEvent) {
+    this.updateSubscriptionTask.run([{
+      email: this.subscription!.email,
+      subscribe: true,
+      mailingLists: {[e.mailingListId]: e.subscribe}
+    }]);
   }
 }

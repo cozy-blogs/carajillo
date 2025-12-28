@@ -136,7 +136,7 @@ async function submitSubscription(form: HTMLFormElement): Promise<{success: bool
     }
     const result = await response.json();
     if (result.success) {
-      if (result.double_opt_in) {
+      if (result.doubleOptIn) {
         return {success: true, message: msg(`📨 Almost there! We sent you a confirmation email. Check spam folder if you don't see it.`), email: data.email as string};
       } else {
         return {success: true, message: msg(`✉️ Subscription successful.`), email: data.email as string};

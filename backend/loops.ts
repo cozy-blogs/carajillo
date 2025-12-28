@@ -140,7 +140,7 @@ export async function upsertContact(email: string, properties: ContactProperties
   }
 }
 
-export async function subscribeContact(email: string, mailingLists: MailingLists): Promise<void> {
+export async function subscribeContact(email: string, mailingLists?: MailingLists): Promise<void> {
   await loops.updateContact({
     email,
     properties: {
