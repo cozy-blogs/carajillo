@@ -4,7 +4,7 @@
 <body>
 <trans-unit id="s0b1690024b09098d">
   <source>📨 Almost there! We sent you a confirmation email. Check spam folder if you don't see it.</source>
-  <target>📨 Prawie gotowe! Wysłaliśmy Ci e-mail w celu potwierdzenia. Sprawdź folder spam, jeśli go tam nie ma.</target>
+  <target>📨 Prawie gotowe! Wysłaliśmy Ci e-mail w celu potwierdzenia. Jeśli nie możesz go znaleźć, sprawdź folder ze spamem.</target>
 </trans-unit>
 <trans-unit id="s06de85f5e3de8fb2">
   <source>✉️ Subscription successful.</source>
@@ -20,7 +20,7 @@
 </trans-unit>
 <trans-unit id="s817ea8fb80b785bd">
   <source>Choose what you are interested in:</source>
-  <target>Wybierz co Cię interesuje:</target>
+  <target>Wybierz tematy, które Cię interesują:</target>
 </trans-unit>
 <trans-unit id="s5ed80f1ff0836b54">
   <source>Your subscription has been confirmed.</source>
@@ -40,7 +40,7 @@
 </trans-unit>
 <trans-unit id="sce9feca123ab7776">
   <source>You are unsubscribed from all mailing lists.</source>
-  <target>Jesteś wypisany z wszystkich list mailingowych.</target>
+  <target>Jesteś wypisany ze wszystkich list mailingowych.</target>
 </trans-unit>
 <trans-unit id="s575e795c45e2d97e">
   <source>Go back</source>
@@ -76,7 +76,7 @@
 </trans-unit>
 <trans-unit id="sd5a4ff84a58f750b">
   <source>Something went wrong. Try again later.</source>
-  <target>Ups! Coś poszło nie tak. Spróbuj ponownie za chwilę.</target>
+  <target>Ups! Coś poszło nie tak. Spróbuj ponownie później.</target>
 </trans-unit>
 </body>
 </file>
