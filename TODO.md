@@ -27,7 +27,7 @@
 * [x] handle initial mailing list in form
 * [ ] update name in control panel
 * [ ] error handling - functions to create errors, http headers
-* [ ] rename 'caffè corretto/carajillo'? move to github
+* [x] rename 'caffè corretto/carajillo'? move to github
 * [x] optimize assets (before: control-panel.js 492 KiB => 133 KiB)
 
 # external

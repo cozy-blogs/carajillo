@@ -2,7 +2,7 @@
 IFS=$'\t\n'
 set -euo pipefail
 cat <<EOF
-# Sample mailer configuration.
+# Sample carajillo configuration.
 # See README.md for more details.
 
 # Company information for email templates

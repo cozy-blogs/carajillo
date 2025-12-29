@@ -1,4 +1,4 @@
-# Mailer
+# Carajillo
 
 Newsletter subscription management for loops.so
 
@@ -83,15 +83,15 @@ Go to [sending options](https://app.loops.so/settings?page=sending) and make sur
 
 Check https://loops.so/docs/api-reference/changelog
 
-Instead the mailer will use its own mechanism with custom `xOptInStatus` property.
+Instead the carajillo will use its own mechanism with custom `xOptInStatus` property.
 It will search for transactional e-mail with `xOptInUrl` data variable.
 You can translate confirmation email into multiple languages.
-Mailer will try to find right translation by email name.
+Carajillo will try to find right translation by email name.
 
 ### Including form
 
 ```html
-<form class="subscription-form" action="https://mailer.example.com/api/honeypot">
+<form class="subscription-form" action="https://carajillo.example.com/api/honeypot">
   <input type="text" name="firstName" placeholder="Name">
   <input type="email" name="email" placeholder="Email" required>
   <input type="hidden" name="mailingLists" value="comma, delimited, mailigListIds">
@@ -100,7 +100,7 @@ Mailer will try to find right translation by email name.
   <div class="subscribe-status"></div>
   <noscript><p>Enable Javascript in your browser to subscribe.</p></noscript>
 </form>
-<script src="https://mailer.example.com/subscribe.js"></script>
+<script src="https://carajillo.example.com/subscribe.js"></script>
 ```
 
 ### Endpoints
@@ -248,12 +248,12 @@ sequenceDiagram
   actor User
   participant UserAgent
   participant reCAPTCHAv3
-  participant mailer
+  participant carajillo
   participant Loops
   participant MailServer
 
-  UserAgent ->>+ mailer: Get reCAPTCHA site key
-  mailer -->>- UserAgent: reCAPTCHA site key
+  UserAgent ->>+ carajillo: Get reCAPTCHA site key
+  carajillo -->>- UserAgent: reCAPTCHA site key
   UserAgent ->> reCAPTCHAv3: get reCAPTCHA script
   note over User,UserAgent: start user/bot verification in background
 
@@ -263,54 +263,54 @@ sequenceDiagram
   activate UserAgent
   UserAgent ->>+ reCAPTCHAv3: get reCAPTCHA token
   reCAPTCHAv3 -->>- UserAgent: reCAPTCHA token
-  UserAgent ->> mailer: Form data + reCAPTCHA token + initial mailing list set
+  UserAgent ->> carajillo: Form data + reCAPTCHA token + initial mailing list set
   deactivate UserAgent
 
-    activate mailer
-    mailer ->>+ reCAPTCHAv3: Verify token
-    reCAPTCHAv3 -->>- mailer: CAPTCHA score
+    activate carajillo
+    carajillo ->>+ reCAPTCHAv3: Verify token
+    reCAPTCHAv3 -->>- carajillo: CAPTCHA score
     rect rgb(100, 0, 0)
       break when score below threshold
-        mailer -->> UserAgent: I smell 🤖
+        carajillo -->> UserAgent: I smell 🤖
       end
     end
 
     alt Contact does not exist
-      mailer ->>+ Loops: Find contact by e-mail
-      Loops -->>- mailer: empty contact list
-      mailer ->>+ Loops: 🆕 Create contact (e-mail, language, captcha score...)
-      Loops -->>- mailer: New contact id
+      carajillo ->>+ Loops: Find contact by e-mail
+      Loops -->>- carajillo: empty contact list
+      carajillo ->>+ Loops: 🆕 Create contact (e-mail, language, captcha score...)
+      Loops -->>- carajillo: New contact id
     else Contact exists
-      mailer ->>+ Loops: Find contact by e-mail
-      Loops -->>- mailer: contact id + optInStatus (one of: "pending", "accepted", "rejected" or null)
+      carajillo ->>+ Loops: Find contact by e-mail
+      Loops -->>- carajillo: contact id + optInStatus (one of: "pending", "accepted", "rejected" or null)
     end
-    mailer ->>+ Loops: 📨 Send confirmation e-mail<br/>transactionalId, JWT
+    carajillo ->>+ Loops: 📨 Send confirmation e-mail<br/>transactionalId, JWT
     Loops ->> MailServer: 📨 Confirmation e-mail
     activate MailServer
-    Loops -->>- mailer: e-mail sent
+    Loops -->>- carajillo: e-mail sent
 
-  mailer -->> UserAgent: OK
-  deactivate mailer
+  carajillo -->> UserAgent: OK
+  deactivate carajillo
   UserAgent ->>+ User: Prompt to check e-mail
 
   User ->>- MailServer: Open e-mail, click confirmation link
   MailServer ->> UserAgent: 🔗 Confirmation link
   deactivate MailServer
   activate UserAgent
-  UserAgent ->>+ mailer: Confirm subscription
-    mailer ->>+ Loops: Update contact (subscribed=true)
-    Loops -->>- mailer: Contact subscribed
-  mailer -->>- UserAgent: Show subscription status page<br/>along with token to change subscription
+  UserAgent ->>+ carajillo: Confirm subscription
+    carajillo ->>+ Loops: Update contact (subscribed=true)
+    Loops -->>- carajillo: Contact subscribed
+  carajillo -->>- UserAgent: Show subscription status page<br/>along with token to change subscription
   UserAgent ->> User: 🐵
   deactivate UserAgent
 
   rect rgb(100, 0, 0)
     opt Change subscription settings
       User ->>+ UserAgent: That was a mistake!
-      UserAgent ->>+ mailer: Unsubscribe
-      mailer ->>+ Loops: Update contact (subscribed=false)
-      Loops -->>- mailer: Contact updated
-      mailer -->>- UserAgent: OK
+      UserAgent ->>+ carajillo: Unsubscribe
+      carajillo ->>+ Loops: Update contact (subscribed=false)
+      Loops -->>- carajillo: Contact updated
+      carajillo -->>- UserAgent: OK
       UserAgent -->>- User: That's fine
     end
   end

@@ -37,7 +37,7 @@ function getToken(): string | undefined {
   }
 }
 
-@customElement('mailer-control-panel')
+@customElement('ca-control-panel')
 export class ControlPanel extends LitElement {
   private confetti = new JSConfetti();
 
@@ -139,11 +139,11 @@ export class ControlPanel extends LitElement {
         const updateStatus = this.updateSubscriptionTask.render({
           pending: () => html`<md-linear-progress indeterminate></md-linear-progress>`,
           complete: () => html``,
-          error: (error) => html`<mailer-status-message><md-icon slot="icon">error</md-icon>${String(error)}</mailer-status-message>`
+          error: (error) => html`<ca-status-message><md-icon slot="icon">error</md-icon>${String(error)}</ca-status-message>`
         });
         return html`
           <div class="container">  
-            <mailer-company .company=${company}></mailer-company>
+            <ca-company .company=${company}></ca-company>
             <div class="update-status">
               ${updateStatus}
             </div>
@@ -151,7 +151,7 @@ export class ControlPanel extends LitElement {
             ${subscription.referer ? html`<md-filled-button @click=${this.close}>${msg('Go back')}<md-icon slot="icon">sentiment_satisfied</md-icon></md-filled-button>` : html``}
           </div>`;
       },
-      error: (error) => html`<mailer-status-message><md-icon slot="icon">error</md-icon>${String(error)}</mailer-status-message>`
+      error: (error) => html`<ca-status-message><md-icon slot="icon">error</md-icon>${String(error)}</ca-status-message>`
     });
   }
 
@@ -160,18 +160,18 @@ export class ControlPanel extends LitElement {
 
     if (subscribed) {
       return html`
-        <mailer-status-message><md-icon slot="icon">verified</md-icon>${msg('Your subscription has been confirmed.')}<br/>
-          ${msg('You may now close this window or update your subscription.')}</mailer-status-message>
+        <ca-status-message><md-icon slot="icon">verified</md-icon>${msg('Your subscription has been confirmed.')}<br/>
+          ${msg('You may now close this window or update your subscription.')}</ca-status-message>
         ${subscription.mailingLists?.length > 0
-           ? html`<mailer-mailing-lists
+           ? html`<ca-mailing-lists
            .mailingLists=${subscription.mailingLists}
            ?disabled=${!subscription.subscribed}
-           @change=${this.onMailingListChange}></mailer-mailing-lists>` : html``}
+           @change=${this.onMailingListChange}></ca-mailing-lists>` : html``}
         <md-filled-tonal-button @click=${this.unsubscribe}>${msg('Unsubscribe')}<md-icon slot="icon">sentiment_dissatisfied</md-icon></md-filled-tonal-button>
       `;
     } else {
       return html`
-        <mailer-status-message><md-icon slot="icon">unsubscribe</md-icon>${msg('You are unsubscribed from all mailing lists.')}</mailer-status-message>
+        <ca-status-message><md-icon slot="icon">unsubscribe</md-icon>${msg('You are unsubscribed from all mailing lists.')}</ca-status-message>
         <md-filled-button @click=${this.subscribe}>${msg('Subscribe')}<md-icon slot="icon">mark_email_read</md-icon></md-filled-button>`;
     }
   }
@@ -259,7 +259,7 @@ export class ControlPanel extends LitElement {
 
 }
 
-@customElement('mailer-status-message')
+@customElement('ca-status-message')
 export class StatusMessage extends LitElement {
 
   static styles = css`

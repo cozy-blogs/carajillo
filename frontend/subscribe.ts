@@ -33,7 +33,7 @@ async function initialize() {
   document.querySelectorAll<HTMLFormElement>(".subscribe-form").forEach(function(form) {
     // @todo allow honeypot on different domain
     if (new URL(form.action).hostname === new URL(apiRoot).hostname) {
-      setupMailerSubscribeForm(form);
+      setupcarajilloSubscribeForm(form);
     }
   });
 }
@@ -79,7 +79,7 @@ function getCaptchaToken(action: string): Promise<string> {
   });
 }
 
-function setupMailerSubscribeForm(form: HTMLFormElement) {
+function setupcarajilloSubscribeForm(form: HTMLFormElement) {
   if (form.dataset.initialized) {
     console.debug('form already initialized', form);
     return;

@@ -7,7 +7,7 @@ export interface Company {
   logo?: string;
 }
 
-@customElement('mailer-company')
+@customElement('ca-company')
 export class CompanyInfo extends LitElement {
   @property({type: Object, attribute: false})
   public company?: Company;
@@ -40,6 +40,6 @@ export class CompanyInfo extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'mailer-company': CompanyInfo;
+    'ca-company': CompanyInfo;
   }
 }

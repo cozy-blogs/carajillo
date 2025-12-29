@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Mailer API
+  title: Carajillo API
   description: Newsletter subscription management API for loops.so
   version: 1.0.0
 servers:

@@ -16,7 +16,7 @@ import { msg } from '@lit/localize';
 import type { MailingList } from '../backend/subscription';
 
 
-@customElement('mailer-mailing-lists')
+@customElement('ca-mailing-lists')
 export class MailingLists extends LitElement {
 
   @property({type: Object, attribute: false})
@@ -33,15 +33,15 @@ export class MailingLists extends LitElement {
           this.mailingLists ?? [],
           (list) => list.id,
           (list, index) => html`
-            <mailer-list-subscription .mailingListId=${list.id} .name=${list.name} .description=${list.description}
+            <ca-list-subscription .mailingListId=${list.id} .name=${list.name} .description=${list.description}
               ?subscribed=${list.subscribed} ?disabled=${this.disabled}>
-            </mailer-list-subscription>`
+            </ca-list-subscription>`
         )}
       </md-list>`;
   }
 }
 
-@customElement('mailer-list-subscription')
+@customElement('ca-list-subscription')
 export class ListSubscription extends LitElement {
 
   @property({type: String})
