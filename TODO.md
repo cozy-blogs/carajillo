@@ -23,7 +23,7 @@
 * [x] autosubscribe using visibilityState/visibilitychange event
 * [x] confetti https://www.npmjs.com/package/js-confetti or https://confettijs.org/
 * [x] move xliff, remove generated translation from repo
-* [ ] automatic tests
+* [x] automatic tests
 * [x] handle initial mailing list in form
 * [ ] update name in control panel
 * [ ] error handling - functions to create errors, http headers

@@ -2,6 +2,16 @@
   "name": "carajillo",
   "version": "1.0.0",
   "description": "Newsletter subscription management for loops.so",
+  "main": "backend/api.ts",
+  "files": [
+    "backend/**/*.ts",
+    "frontend/dist/**/*",
+    "netlify/**/*",
+    "netlify.toml",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "prebuild": "npm run build:openapi && npm run build:localize",
     "build": "webpack",
@@ -12,7 +22,8 @@
     "check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "prepublishOnly": "npm run check && npm test && npm run build"
   },
   "keywords": [
     "netlify",
@@ -22,6 +33,18 @@
   ],
   "author": "Łukasz Cieśnik <lukasz.ciesnik@gmail.com>",
   "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lispmachine/carajillo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lispmachinecarajillo/issues"
+  },
+  "homepage": "https://github.com/lispmachine/carajillo#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "@lit/context": "^1.1.6",
     "@lit/localize": "^0.12.2",

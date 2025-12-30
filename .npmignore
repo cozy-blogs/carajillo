@@ -1,11 +1,9 @@
 # Dependencies
 node_modules/
-yarn.lock
 
-# Build outputs
+# Build outputs (keep only what's needed)
 *.js.map
 *.d.ts.map
-frontend/dist/
 frontend/locales/
 backend/openapi-spec.ts
 
@@ -32,4 +30,24 @@ Thumbs.db
 coverage/
 *.lcov
 .nyc_output/
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.spec.ts
+jest.config.js
+
+# Development files
+TODO.md
+scripts/
+translation/
+
+# GitHub
+.github/
+
+# CI/CD
+.gitignore
+
+# Documentation (keep README.md)
+# README.md is kept for npm
 
