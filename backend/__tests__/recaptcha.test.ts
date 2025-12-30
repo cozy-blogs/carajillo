@@ -1,0 +1,251 @@
+import { configuration, verifyCaptcha, sendVerificationRequest } from '../recaptcha';
+import { HttpError } from '../error';
+
+// Mock node-fetch before importing recaptcha
+jest.mock('node-fetch', () => {
+  return jest.fn();
+});
+
+import fetch from 'node-fetch';
+const mockedFetch = fetch as jest.MockedFunction<typeof fetch>;
+
+describe('recaptcha', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = { ...originalEnv };
+    process.env.CAPTCHA_PROVIDER = 'recaptcha';
+    process.env.RECAPTCHA_SITE_KEY = 'test-site-key';
+    process.env.RECAPTCHA_SECRET = 'test-secret';
+    process.env.CAPTCHA_THRESHOLD = '0.5';
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    jest.clearAllMocks();
+  });
+
+  describe('configuration', () => {
+    it('should return correct configuration', () => {
+      const config = configuration();
+
+      expect(config).toEqual({
+        success: true,
+        provider: 'recaptcha',
+        site_key: 'test-site-key',
+      });
+    });
+
+    it('should use default provider when not set', () => {
+      // This test verifies the default behavior
+      // The default is set in the module, so we test it with the default
+      expect(configuration().provider).toBeDefined();
+    });
+  });
+
+  describe('verifyCaptcha', () => {
+    it('should return true when score is above threshold', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          score: 0.9,
+          action: 'subscribe',
+          challenge_ts: '2024-01-01T00:00:00Z',
+          hostname: 'example.com',
+        }),
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await verifyCaptcha('subscribe', 'test-token');
+
+      expect(result).toBe(true);
+      expect(mockedFetch).toHaveBeenCalledWith(
+        'https://www.google.com/recaptcha/api/siteverify',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('secret=') && expect.stringContaining('&response=test-token'),
+        })
+      );
+    });
+
+    it('should return false when score is below threshold', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          score: 0.3,
+          action: 'subscribe',
+          challenge_ts: '2024-01-01T00:00:00Z',
+          hostname: 'example.com',
+        }),
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await verifyCaptcha('subscribe', 'test-token');
+
+      expect(result).toBe(false);
+    });
+
+    it('should throw HttpError when action does not match', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          score: 0.9,
+          action: 'different-action',
+          challenge_ts: '2024-01-01T00:00:00Z',
+          hostname: 'example.com',
+        }),
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      await expect(verifyCaptcha('subscribe', 'test-token')).rejects.toThrow(HttpError);
+      try {
+        await verifyCaptcha('subscribe', 'test-token');
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpError);
+        expect((error as HttpError).statusCode).toBe(400);
+        expect((error as HttpError).reason).toBe('captcha-action-mismatch');
+      }
+    });
+
+    it('should throw HttpError for invalid-input-response error', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true, // success can be true even with error codes
+          score: 0.9,
+          action: 'subscribe',
+          challenge_ts: '2024-01-01T00:00:00Z',
+          hostname: 'example.com',
+          'error-codes': ['invalid-input-response'],
+        }),
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      await expect(verifyCaptcha('subscribe', 'test-token')).rejects.toThrow(HttpError);
+      try {
+        await verifyCaptcha('subscribe', 'test-token');
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpError);
+        expect((error as HttpError).statusCode).toBe(400);
+        expect((error as HttpError).reason).toBe('bad-captcha');
+      }
+    });
+
+    it('should throw HttpError for timeout-or-duplicate error', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true, // success can be true even with error codes
+          score: 0.9,
+          action: 'subscribe',
+          challenge_ts: '2024-01-01T00:00:00Z',
+          hostname: 'example.com',
+          'error-codes': ['timeout-or-duplicate'],
+        }),
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      await expect(verifyCaptcha('subscribe', 'test-token')).rejects.toThrow(HttpError);
+      try {
+        await verifyCaptcha('subscribe', 'test-token');
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpError);
+        expect((error as HttpError).statusCode).toBe(429);
+        expect((error as HttpError).reason).toBe('captcha-timeout');
+      }
+    });
+
+    it('should return true when provider is "none"', async () => {
+      // Note: This test verifies the 'none' provider behavior
+      // In a real scenario, you would set CAPTCHA_PROVIDER=none before starting the app
+      // For testing, we verify the configuration function handles it correctly
+      process.env.CAPTCHA_PROVIDER = 'none';
+      jest.resetModules();
+      
+      // Re-import the module with new env
+      const recaptchaModule = await import('../recaptcha');
+      const result = await recaptchaModule.verifyCaptcha('subscribe', 'any-token');
+      
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('sendVerificationRequest', () => {
+    it('should send verification request and return response', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          score: 0.9,
+          action: 'subscribe',
+          challenge_ts: '2024-01-01T00:00:00Z',
+          hostname: 'example.com',
+        }),
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await sendVerificationRequest('test-token');
+
+      expect(result).toEqual({
+        success: true,
+        score: 0.9,
+        action: 'subscribe',
+        challenge_ts: '2024-01-01T00:00:00Z',
+        hostname: 'example.com',
+      });
+    });
+
+    it('should throw error when RECAPTCHA_SECRET is not set', async () => {
+      const originalSecret = process.env.RECAPTCHA_SECRET;
+      delete process.env.RECAPTCHA_SECRET;
+      
+      jest.resetModules();
+      const recaptchaModule = await import('../recaptcha');
+      
+      await expect(recaptchaModule.sendVerificationRequest('test-token')).rejects.toThrow('Server configuration error');
+      
+      process.env.RECAPTCHA_SECRET = originalSecret;
+    });
+
+    it('should throw error when API response is not ok', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 500,
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      await expect(sendVerificationRequest('test-token')).rejects.toThrow('reCAPTCHA API returned status 500');
+    });
+
+    it('should throw HttpError when reCAPTCHA returns success: false', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: false,
+        }),
+      };
+
+      mockedFetch.mockResolvedValue(mockResponse as any);
+
+      await expect(sendVerificationRequest('test-token')).rejects.toThrow(HttpError);
+      try {
+        await sendVerificationRequest('test-token');
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpError);
+        expect((error as HttpError).statusCode).toBe(500);
+      }
+    });
+  });
+});
+

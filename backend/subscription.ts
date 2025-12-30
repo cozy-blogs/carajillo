@@ -31,7 +31,7 @@ export async function subscribe(request: SubscribeRequest) {
 
   const {email, mailingLists, captchaToken, ...properties} = request;
 
-  const valid = verifyCaptcha('subscribe', captchaToken);
+  const valid = await verifyCaptcha('subscribe', captchaToken);
   if (!valid) {
     throw new HttpError({
       statusCode: 429,
