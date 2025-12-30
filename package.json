@@ -57,7 +57,7 @@
     "express-openapi-validator": "^5.6.0",
     "js-confetti": "^0.13.1",
     "jsonwebtoken": "^9.0.3",
-    "lit": "^3.3.1",
+    "lit": "^3.3.2",
     "loops": "^6.0.1",
     "node-fetch": "^3.3.2",
     "serverless-http": "^4.0.0"
