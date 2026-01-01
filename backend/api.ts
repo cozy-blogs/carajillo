@@ -9,6 +9,7 @@ import { subscribe, getSubscription, updateSubscription } from "./subscription"
 import type { SubscribeRequest, UpdateSubscriptionRequest } from "./subscription";
 import { getMailingLists } from "./loops";
 import { configuration as captchaConfiguration } from "./recaptcha";
+import rateLimit from "express-rate-limit";
 
 export const app = express();
 
@@ -47,6 +48,11 @@ const apiSpecValidator = openApiValidator({
 
 const router = Router();
 
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs for sensitive endpoints
+});
+
 router.get("/company", async (req, res) => {
   res.json({
     name: process.env.COMPANY_NAME || '',
@@ -55,16 +61,16 @@ router.get("/company", async (req, res) => {
   });
 });
 
-router.post("/subscription", async (req, res) => {
+router.post("/subscription", authRateLimiter, async (req, res) => {
   const response = await subscribe(req.body as SubscribeRequest);
   res.json(response);
 });
-router.get("/subscription", async (req, res) => {
+router.get("/subscription", authRateLimiter, async (req, res) => {
   const email = authenticate(req);
   const response = await getSubscription(email);
   res.json(response);
 });
-router.put("/subscription", async (req, res) => {
+router.put("/subscription", authRateLimiter, async (req, res) => {
   const email = authenticate(req);
   const request = req.body as UpdateSubscriptionRequest;
   if (request.email !== email) {
