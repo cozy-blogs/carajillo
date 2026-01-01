@@ -140,11 +140,17 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /test:
+  /test/{endpoint}:
+    parameters:
+      - name: endpoint
+        in: path
+        required: true
+        schema:
+          type: string
     get:
       summary: Test endpoint
       description: Returns test information about the request
-      operationId: test
+      operationId: testEndpoint
       tags:
         - Test
       responses:

@@ -9,6 +9,8 @@ import { subscribe, getSubscription, updateSubscription } from "./subscription"
 import type { SubscribeRequest, UpdateSubscriptionRequest } from "./subscription";
 import { getMailingLists } from "./loops";
 import { configuration as captchaConfiguration } from "./recaptcha";
+import rateLimit from "express-rate-limit";
+import ms from "ms";
 
 export const app = express();
 
@@ -21,9 +23,32 @@ app.set('etag', false);
 // Do not expose the tech stack
 app.set('x-powered-by', false);
 
+const numberOfProxies = process.env.NUMBER_OF_PROXIES ? parseInt(process.env.NUMBER_OF_PROXIES) : 1;
 // Netlify serves as proxy for the express app.
 // @see https://expressjs.com/en/guide/behind-proxies.html
-app.set('trust proxy', true);
+// @see https://express-rate-limit.mintlify.app/reference/error-codes#err-erl-permissive-trust-proxy
+app.set('trust proxy', numberOfProxies);
+
+// Workaround for Express bug where req.ip can be undefined even when req.ips is populated
+// when trust proxy is set to a number. Parse X-Forwarded-For header directly.
+// X-Forwarded-For format: "client_ip, proxy1_ip, proxy2_ip, ..." (leftmost is original client)
+// When trusting N proxies, the client IP is the leftmost IP in the chain.
+app.use((req, res, next) => {
+  if (!req.ip) {
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    if (typeof xForwardedFor === 'string') {
+      const ips = xForwardedFor.split(',').map(ip => ip.trim()).filter(ip => ip);
+      if (ips.length > numberOfProxies) {
+        // Client IP is always the first untrusted IP, i.e. one preceding the trusted proxies.
+        const clientIP = ips[ips.length - numberOfProxies - 1];
+        (req as any).ip = clientIP;
+        console.debug(`Client IP: ${clientIP}`);
+        console.debug(`Trusted proxies: ${ips.slice(-numberOfProxies).join(', ')}`);
+      }
+    }
+  }
+  next();
+});
 
 // Parse strings as simple key-value pairs.
 app.set('query parser', 'simple');
@@ -47,6 +72,17 @@ const apiSpecValidator = openApiValidator({
 
 const router = Router();
 
+const subscribeRateLimiter = rateLimit({
+  limit: 10,
+  windowMs: ms('5 minutes'),
+  legacyHeaders: false,
+});
+const authenticateRateLimiter = rateLimit({
+  limit: 500,
+  windowMs: ms('30 minutes'),
+  legacyHeaders: false,
+});
+
 router.get("/company", async (req, res) => {
   res.json({
     name: process.env.COMPANY_NAME || '',
@@ -55,16 +91,16 @@ router.get("/company", async (req, res) => {
   });
 });
 
-router.post("/subscription", async (req, res) => {
+router.post("/subscription", subscribeRateLimiter, async (req, res) => {
   const response = await subscribe(req.body as SubscribeRequest);
   res.json(response);
 });
-router.get("/subscription", async (req, res) => {
+router.get("/subscription", authenticateRateLimiter, async (req, res) => {
   const email = authenticate(req);
   const response = await getSubscription(email);
   res.json(response);
 });
-router.put("/subscription", async (req, res) => {
+router.put("/subscription", authenticateRateLimiter, async (req, res) => {
   const email = authenticate(req);
   const request = req.body as UpdateSubscriptionRequest;
   if (request.email !== email) {
@@ -91,12 +127,37 @@ router.get("/lists", async (req, res) => {
 });
 
 if (process.env.NODE_ENV === "development") {
-  router.get("/test", apiSpecValidator, async (req: express.Request, res: express.Response) => {
+  router.get("/test/ip", async (req: express.Request, res: express.Response) => {
     res.json({
+      number_of_proxies: numberOfProxies,
       hostname: req.hostname,
       url: req.originalUrl,
       ip: req.ip,
       ips: req.ips,
+      headers: req.headers,
+    });
+  });
+
+  const limiter = rateLimit({
+    limit: 5,
+    windowMs: ms('1 minutes'),
+    legacyHeaders: false,
+  });
+  router.get("/test/rate-limit", limiter, async (req, res) => {
+    const key = req.ip ?? '';
+    const info = await limiter.getKey(key);
+    res.json({
+      key,
+      totalHits: info?.totalHits,
+      resetTime: info?.resetTime?.toISOString(),
+    });
+  });
+} else {
+  router.get("/test/:endpoint", async (req, res) => {
+    throw new HttpError({
+      statusCode: 403,
+      message: "Forbidden",
+      details: "Test endpoints are not allowed in production",
     });
   });
 }

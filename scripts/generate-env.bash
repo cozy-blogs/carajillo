@@ -13,6 +13,11 @@ COMPANY_LOGO=https://example.com/logo.png # optional
 # Domains where submission forms may be created
 CORS_ORIGIN=example.com other.example.com # default: all submissions are accepted
 
+# Number of proxies to trust
+# @see https://github.com/express-rate-limit/express-rate-limit/wiki/Troubleshooting-Proxy-Issues
+# @see https://expressjs.com/en/guide/behind-proxies.html
+NUMBER_OF_PROXIES=1 # default: 1
+
 # Secret key for JWT token signing
 JWT_SECRET=$(dd count=1 ibs=32 if=/dev/random status=none | base64) # required
 # How long token in e-mail confirmation link is valid

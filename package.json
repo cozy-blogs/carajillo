@@ -19,7 +19,9 @@
     "build:openapi": "node scripts/generate-openapi-spec.js",
     "dev": "netlify dev -c 'webpack --watch'",
     "dev:localize": "lit-localize extract",
-    "check": "tsc --noEmit",
+    "check": "npm run check:types && npm run check:openapi",
+    "check:types": "tsc --noEmit",
+    "check:openapi": "validate-api backend/openapi.yaml",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -35,12 +37,12 @@
   "license": "GPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lispmachine/carajillo.git"
+    "url": "https://github.com/cozy-blogs/carajillo.git"
   },
   "bugs": {
-    "url": "https://github.com/lispmachinecarajillo/issues"
+    "url": "https://github.com/cozy-blogs/carajillo/issues"
   },
-  "homepage": "https://github.com/lispmachine/carajillo#readme",
+  "homepage": "https://github.com/cozy-blogs/carajillo#readme",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
@@ -55,6 +57,7 @@
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "express-openapi-validator": "^5.6.0",
+    "express-rate-limit": "^8.2.1",
     "js-confetti": "^0.13.1",
     "jsonwebtoken": "^9.0.3",
     "lit": "^3.3.2",
@@ -64,25 +67,26 @@
   },
   "devDependencies": {
     "@lit/localize-tools": "^0.8.1",
+    "@seriousme/openapi-schema-validator": "^2.7.0",
     "@types/cors": "^2.8.19",
+    "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.3",
     "@types/node-fetch": "^2.6.13",
+    "@types/supertest": "^6.0.3",
     "dotenv": "^17.2.3",
     "generate-json-webpack-plugin": "^2.0.0",
     "html-webpack-plugin": "^5.6.5",
+    "jest": "^30.2.0",
     "js-yaml": "^4.1.1",
     "netlify-cli": "^23.13.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.6",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2",
-    "@types/jest": "^30.0.0",
-    "@types/supertest": "^6.0.3",
-    "jest": "^30.2.0",
-    "supertest": "^7.1.4",
-    "ts-jest": "^29.4.6"
+    "webpack-dev-server": "^5.2.2"
   }
 }
