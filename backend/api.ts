@@ -23,9 +23,10 @@ app.set('etag', false);
 // Do not expose the tech stack
 app.set('x-powered-by', false);
 
+const numberOfProxies = process.env.NUMBER_OF_PROXIES ? parseInt(process.env.NUMBER_OF_PROXIES) : 1;
 // Netlify serves as proxy for the express app.
 // @see https://expressjs.com/en/guide/behind-proxies.html
-app.set('trust proxy', true);
+app.set('trust proxy', numberOfProxies);
 
 // Parse strings as simple key-value pairs.
 app.set('query parser', 'simple');
@@ -104,12 +105,29 @@ router.get("/lists", async (req, res) => {
 });
 
 if (process.env.NODE_ENV === "development") {
-  router.get("/test", apiSpecValidator, async (req: express.Request, res: express.Response) => {
+  router.get("/test/ip", apiSpecValidator, async (req: express.Request, res: express.Response) => {
     res.json({
       hostname: req.hostname,
       url: req.originalUrl,
       ip: req.ip,
       ips: req.ips,
+    });
+  });
+
+  const limiter = rateLimit({
+    limit: 5,
+    windowMs: ms('1 minutes'),
+    legacyHeaders: false,
+  });
+  router.get("/test/rate-limit", limiter, async (req, res) => {
+    const key = req.ip ?? '';
+    const info = await limiter.getKey(key);
+    limiter(req, res, async () => {
+      res.json({
+        key,
+        totalHits: info?.totalHits,
+        resetTime: info?.resetTime?.toISOString(),
+      });
     });
   });
 }
