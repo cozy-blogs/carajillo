@@ -43,7 +43,7 @@ app.use((req, res, next) => {
         const clientIP = ips[ips.length - numberOfProxies - 1];
         (req as any).ip = clientIP;
         console.debug(`Client IP: ${clientIP}`);
-        console.debug(`Trusted proxies: ${ips.slice(0, -numberOfProxies).join(', ')}`);
+        console.debug(`Trusted proxies: ${ips.slice(-numberOfProxies).join(', ')}`);
       }
     }
   }
@@ -146,12 +146,10 @@ if (process.env.NODE_ENV === "development") {
   router.get("/test/rate-limit", limiter, async (req, res) => {
     const key = req.ip ?? '';
     const info = await limiter.getKey(key);
-    limiter(req, res, async () => {
-      res.json({
-        key,
-        totalHits: info?.totalHits,
-        resetTime: info?.resetTime?.toISOString(),
-      });
+    res.json({
+      key,
+      totalHits: info?.totalHits,
+      resetTime: info?.resetTime?.toISOString(),
     });
   });
 } else {
