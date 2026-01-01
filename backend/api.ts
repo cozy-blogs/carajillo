@@ -105,12 +105,13 @@ router.get("/lists", async (req, res) => {
 });
 
 if (process.env.NODE_ENV === "development") {
-  router.get("/test/ip", apiSpecValidator, async (req: express.Request, res: express.Response) => {
+  router.get("/test/ip", async (req: express.Request, res: express.Response) => {
     res.json({
       hostname: req.hostname,
       url: req.originalUrl,
       ip: req.ip,
       ips: req.ips,
+      headers: req.headers,
     });
   });
 
@@ -128,6 +129,14 @@ if (process.env.NODE_ENV === "development") {
         totalHits: info?.totalHits,
         resetTime: info?.resetTime?.toISOString(),
       });
+    });
+  });
+} else {
+  router.get("/test/:endpoint", async (req, res) => {
+    throw new HttpError({
+      statusCode: 403,
+      message: "Forbidden",
+      details: "Test endpoints are not allowed in production",
     });
   });
 }
