@@ -239,7 +239,7 @@ describe('loops', () => {
       } as any);
       mockLoopsClientInstance.sendTransactionalEmail.mockResolvedValue(undefined as any);
 
-      await sendConfirmationMail('test@example.com', 'https://example.com/confirm?token=abc', 'en');
+      await sendConfirmationMail('test@example.com', new URL('https://example.com/confirm?token=abc'), 'en');
 
       expect(mockLoopsClientInstance.sendTransactionalEmail).toHaveBeenCalledWith({
         email: 'test@example.com',
@@ -272,7 +272,7 @@ describe('loops', () => {
         pagination: { nextCursor: null, nextPage: null },
       } as any);
 
-      await sendConfirmationMail('test@example.com', 'https://example.com/confirm', 'pl');
+      await sendConfirmationMail('test@example.com', new URL('https://example.com/confirm'), 'pl');
 
       expect(mockLoopsClientInstance.sendTransactionalEmail).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -288,7 +288,7 @@ describe('loops', () => {
       } as any);
 
       await expect(
-        sendConfirmationMail('test@example.com', 'https://example.com/confirm', 'en')
+        sendConfirmationMail('test@example.com', new URL('https://example.com/confirm'), 'en')
       ).rejects.toThrow('No confirmation e-mail configured');
     });
   });

@@ -92,7 +92,7 @@ router.get("/company", async (req, res) => {
 });
 
 router.post("/subscription", subscribeRateLimiter, async (req, res) => {
-  const response = await subscribe(req.body as SubscribeRequest);
+  const response = await subscribe(req);
   res.json(response);
 });
 router.get("/subscription", authenticateRateLimiter, async (req, res) => {
@@ -130,10 +130,15 @@ if (process.env.NODE_ENV === "development") {
   router.get("/test/ip", async (req: express.Request, res: express.Response) => {
     res.json({
       number_of_proxies: numberOfProxies,
-      hostname: req.hostname,
-      url: req.originalUrl,
       ip: req.ip,
       ips: req.ips,
+      url: req.originalUrl,
+      protocol: req.protocol,
+      hostname: req.hostname,
+      baseUrl: req.baseUrl,
+      path: req.path,
+      query: req.query,
+      params: req.params,
       headers: req.headers,
     });
   });

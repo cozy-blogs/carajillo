@@ -14,28 +14,29 @@ jest.mock('../loops');
 jest.mock('../jwt');
 
 describe('subscription', () => {
-  const originalEnv = process.env;
 
-  beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...originalEnv };
-    process.env.URL = 'https://example.com';
-
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
   describe('subscribe', () => {
-    const mockRequest = {
+    const mockRequestBody = {
       email: 'test@example.com',
       captchaToken: 'captcha-token',
       mailingLists: ['list-1'],
       language: 'en',
       referer: 'https://example.com/page',
     } as SubscribeRequest;
+
+    const createMockRequest = (body: SubscribeRequest = mockRequestBody) => ({
+      body,
+      protocol: 'https',
+      hostname: 'example.com',
+      get: jest.fn((header: string) => {
+        if (header === 'host') return 'example.com';
+        return undefined;
+      }),
+    } as any);
 
     it('should successfully subscribe new contact', async () => {
       (recaptcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
@@ -49,7 +50,8 @@ describe('subscription', () => {
       (jwt.createToken as jest.Mock).mockReturnValue('jwt-token');
       (loops.sendConfirmationMail as jest.Mock).mockResolvedValue(undefined);
 
-      const result = await subscribe(mockRequest);
+      const mockReq = createMockRequest();
+      const result = await subscribe(mockReq);
 
       expect(result).toEqual({
         success: true,
@@ -58,45 +60,18 @@ describe('subscription', () => {
       });
       expect(recaptcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token');
       expect(loops.upsertContact).toHaveBeenCalled();
-      expect(loops.sendConfirmationMail).toHaveBeenCalled();
-    });
-
-    it('should throw HttpError when URL env is missing', async () => {
-      const originalUrl = process.env.URL;
-      delete process.env.URL;
-      
-      // Reset modules to pick up the new env var
-      jest.resetModules();
-      
-      // Re-import and re-mock after reset
-      const recaptchaModule = await import('../recaptcha');
-      jest.spyOn(recaptchaModule, 'verifyCaptcha').mockResolvedValue(true);
-      
-      const subscriptionModule = await import('../subscription');
-      
-      await expect(subscriptionModule.subscribe(mockRequest)).rejects.toThrow();
-      
-      // Verify the error details
-      try {
-        await subscriptionModule.subscribe(mockRequest);
-      } catch (error: any) {
-        expect(error.message).toContain('Internal Server error');
-        expect(error.statusCode).toBe(500);
-        expect(error.details).toBe('missing URL env');
-      }
-      
-      process.env.URL = originalUrl;
-      jest.resetModules(); // Reset again to restore original state
+      expect(loops.sendConfirmationMail).toHaveBeenCalledWith('test@example.com', new URL('https://example.com/control-panel?token=jwt-token&lang=en'), 'en');
     });
 
     it('should throw HttpError when CAPTCHA verification fails', async () => {
       // Ensure the mock is set up correctly
       (recaptcha.verifyCaptcha as jest.Mock).mockResolvedValueOnce(false);
 
-      await expect(subscribe(mockRequest)).rejects.toThrow();
+      const mockReq = createMockRequest();
+      await expect(subscribe(mockReq)).rejects.toThrow();
       
       try {
-        await subscribe(mockRequest);
+        await subscribe(mockReq);
       } catch (error: any) {
         expect(error.message).toBe('Try again later');
         expect(error.statusCode).toBe(429);
@@ -117,9 +92,10 @@ describe('subscription', () => {
         mailingLists: {},
       });
 
-      await expect(subscribe(mockRequest)).rejects.toThrow(HttpError);
+      const mockReq = createMockRequest();
+      await expect(subscribe(mockReq)).rejects.toThrow(HttpError);
       try {
-        await subscribe(mockRequest);
+        await subscribe(mockReq);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(429);
@@ -136,7 +112,8 @@ describe('subscription', () => {
         mailingLists: { 'list-1': true },
       });
 
-      const result = await subscribe(mockRequest);
+      const mockReq = createMockRequest();
+      const result = await subscribe(mockReq);
 
       expect(result.success).toBe(true);
       expect(loops.sendConfirmationMail).not.toHaveBeenCalled();
@@ -154,10 +131,12 @@ describe('subscription', () => {
       (jwt.createToken as jest.Mock).mockReturnValue('jwt-token');
       (loops.sendConfirmationMail as jest.Mock).mockResolvedValue(undefined);
 
-      const result = await subscribe({
-        ...mockRequest,
+      const mockReq = createMockRequest({
+        ...mockRequestBody,
         mailingLists: ['list-1', 'list-2'],
       } as SubscribeRequest);
+
+      const result = await subscribe(mockReq);
 
       expect(result.success).toBe(true);
       expect(loops.sendConfirmationMail).toHaveBeenCalled();

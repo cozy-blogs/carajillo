@@ -17,7 +17,7 @@
     "build": "webpack",
     "build:localize": "lit-localize build",
     "build:openapi": "node scripts/generate-openapi-spec.js",
-    "dev": "netlify dev -c 'webpack --watch'",
+    "dev": "NODE_ENV=development netlify dev -c 'webpack --watch'",
     "dev:localize": "lit-localize extract",
     "check": "npm run check:types && npm run check:openapi",
     "check:types": "tsc --noEmit",

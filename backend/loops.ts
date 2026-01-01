@@ -168,7 +168,7 @@ export async function unsubscribeContact(email: string): Promise<void> {
   });
 }
 
-export async function sendConfirmationMail(email: string, confirmUrl: string, language?: string)
+export async function sendConfirmationMail(email: string, confirmUrl: URL, language?: string)
 {
   const confirmationEmail = await findDoubleOptInEmail(language);
   console.log(`Sending ${confirmationEmail.name} to ${email} with ${confirmUrl}`);
@@ -180,7 +180,7 @@ export async function sendConfirmationMail(email: string, confirmUrl: string, la
       companyName: companyName || '',
       companyAddress: companyAddress || '',
       companyLogo: companyLogo || '',
-      xOptInUrl: confirmUrl,
+      xOptInUrl: confirmUrl.toString(),
     }
   });
 }

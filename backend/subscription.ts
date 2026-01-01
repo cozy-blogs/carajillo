@@ -1,11 +1,8 @@
+import { Request } from 'express';
 import { HttpError } from './error';
 import { verifyCaptcha } from './recaptcha';
 import { findContact, upsertContact, sendConfirmationMail, subscribeContact, unsubscribeContact, getMailingLists } from './loops';
 import { createToken } from './jwt';
-
-// @todo this env is netlify specific
-// https://docs.netlify.com/build/configure-builds/environment-variables/#deploy-urls-and-metadata
-const rootUrl = process.env.URL;
 
 export type SubscribeRequest = {
   email : string;
@@ -22,11 +19,11 @@ export type SubscribeRequest = {
  * It sends confirmation e-mail (if it does not exist already)
  * and protects the entry with CAPTCHA mechanism.
  */
-export async function subscribe(request: SubscribeRequest) {
+export async function subscribe(req: Request) {
+  const request = req.body as SubscribeRequest;
   console.info(`subscribe: ${JSON.stringify(request)}`);
-  if (rootUrl === undefined) {
-    throw new HttpError({statusCode: 500, message: "Internal Server error", details: 'missing URL env'});
-  }
+  
+  const rootUrl = new URL(`${req.protocol}://${req.hostname}`);
   /// @todo make captcha_token optional
 
   const {email, mailingLists, captchaToken, ...properties} = request;
@@ -56,12 +53,12 @@ export async function subscribe(request: SubscribeRequest) {
     }
   }
 
-  const token = createToken(contact.email, new URL(rootUrl));
+  const token = createToken(contact.email, rootUrl);
   const params = new URLSearchParams({token});
   if (properties.language !== undefined) {
     params.set('lang', properties.language)
   }
-  await sendConfirmationMail(contact.email, `${rootUrl}/control-panel?${params}`, properties.language);
+  await sendConfirmationMail(contact.email, new URL(`/control-panel?${params}`, rootUrl), properties.language);
 
   return {success: true, doubleOptIn: true, email};
 }
