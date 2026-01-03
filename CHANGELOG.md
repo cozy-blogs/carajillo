@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-01-04
+- test release, frontend refactor
+
 ## [1.0.0] - 2026-01-03
 
 ### Initial release
@@ -21,4 +24,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/lispmachine/carajillo/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/lispmachine/carajillo/releases/tag/v1.0.0
+[1.0.1]: https://github.com/lispmachine/carajillo/releases/tag/v1.0.0
 

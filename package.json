@@ -1,6 +1,6 @@
 {
   "name": "carajillo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Newsletter subscription management for Loops",
   "main": "backend/api.ts",
   "files": [
