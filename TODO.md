@@ -29,6 +29,7 @@
 * [ ] error handling - functions to create errors, http headers
 * [x] rename 'caffè corretto/carajillo'? move to github
 * [x] optimize assets (before: control-panel.js 492 KiB => 133 KiB)
+* [ ] form detection (carajillo class)
 
 # external
 * [ ] honeypot service

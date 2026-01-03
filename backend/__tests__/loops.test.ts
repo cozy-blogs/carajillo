@@ -289,7 +289,7 @@ describe('loops', () => {
 
       await expect(
         sendConfirmationMail('test@example.com', new URL('https://example.com/confirm'), 'en')
-      ).rejects.toThrow('No confirmation e-mail configured');
+      ).rejects.toThrow('No confirmation email configured');
     });
   });
 

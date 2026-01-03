@@ -78,7 +78,7 @@ type ContactProperties = Record<string, string | number | boolean | null>;
 type DoubleOptInStatus = "pending" | "accepted" | "rejected" | null;
 
 /**
- * Find contact by e-mail
+ * Find contact by email
  * @see https://loops.so/docs/api-reference/find-contact
  */
 export async function findContact(email: string): Promise<Contact | null> {
@@ -101,7 +101,7 @@ function getDoubleOptInStatus(contact: LoopsContact): DoubleOptInStatus {
     return customStatus;
   } else if (settledStates.has(builtInStatus)) {
     // When custom status is not settled, use the built-in one.
-    // We cannot re-send confirmation e-mails, if newsletter used
+    // We cannot re-send confirmation emails, if newsletter used
     // built-in loops double opt-in and contact accepted or rejected subscription.
     return builtInStatus;
   } else {
@@ -112,7 +112,7 @@ function getDoubleOptInStatus(contact: LoopsContact): DoubleOptInStatus {
 
 /**
  * Create or update contact.
- * @param email           Contact e-mail address 
+ * @param email           Contact email address 
  * @param properties      Extra contact properties (firstName, lastName, userGroup etc.)
  * @param mailingListIds  Initial mailing list IDs (optional, defaults to all publicly available mailing lists)
  * @see https://loops.so/docs/api-reference/create-contact
@@ -186,7 +186,7 @@ export async function sendConfirmationMail(email: string, confirmUrl: URL, langu
 }
 
 /**
- * Get the list of transactional e-mails
+ * Get the list of transactional emails
  * 
  * https://loops.so/docs/transactional
  * https://app.loops.so/transactional
@@ -195,9 +195,9 @@ const getTransactionalEmails = unpaginate(loops.getTransactionalEmails.bind(loop
 
 
 /**
- * Find the transactional e-mail used to confirm subscription.
+ * Find the transactional email used to confirm subscription.
  * 
- * The double opt-in e-mail should have `xOptInUrl` in its data variables
+ * The double opt-in email should have `xOptInUrl` in its data variables
  * and language code in its name e.g. `#PL` if email is in polish.
  * 
  * @param language  Preferred language
@@ -207,7 +207,7 @@ async function findDoubleOptInEmail(language?: string) {
   const transactionalEmails = await getTransactionalEmails();
   const doubleOptInEmails = transactionalEmails.filter((email) => email.dataVariables.includes('xOptInUrl'));
   if (doubleOptInEmails.length === 0)
-    throw new Error("No confirmation e-mail configured");
+    throw new Error("No confirmation email configured");
 
   if (language) {
     const translated = doubleOptInEmails.filter((email) => email.name.includes(`#${language.toUpperCase()}`))

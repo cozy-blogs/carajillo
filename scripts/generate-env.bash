@@ -20,8 +20,8 @@ NUMBER_OF_PROXIES=1 # default: 1
 
 # Secret key for JWT token signing
 JWT_SECRET=$(dd count=1 ibs=32 if=/dev/random status=none | base64) # required
-# How long token in e-mail confirmation link is valid
-# After this time another confirmation e-mail will be sent when needed
+# How long token in email confirmation link is valid
+# After this time another confirmation email will be sent when needed
 # See: https://github.com/vercel/ms#readme for time delta syntax
 JWT_EXPIRATION=1 year # default: 1 year
 

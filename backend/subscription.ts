@@ -13,10 +13,10 @@ export type SubscribeRequest = {
 } & Record<string, string>;
 
 /**
- * First step of e-mail subscrition.
+ * First step of email subscrition.
  *
  * At this stage email is not confirmed to be valid.
- * It sends confirmation e-mail (if it does not exist already)
+ * It sends confirmation email (if it does not exist already)
  * and protects the entry with CAPTCHA mechanism.
  */
 export async function subscribe(req: Request) {
@@ -27,6 +27,7 @@ export async function subscribe(req: Request) {
   /// @todo make captcha_token optional
 
   const {email, mailingLists, captchaToken, ...properties} = request;
+  /// @todo set default language from the Accept-Language header
 
   const valid = await verifyCaptcha('subscribe', captchaToken);
   if (!valid) {
@@ -48,7 +49,7 @@ export async function subscribe(req: Request) {
     console.info(`Contact already subscribed: ${contact.email}`);
     if (mailingLists.every((requestedMailingList) => contact.mailingLists[requestedMailingList]))
     {
-      console.info('Already subscribed for all requested mailing lists - do not send e-mail');
+      console.info('Already subscribed for all requested mailing lists - do not send email');
       return {success: true, doubleOptIn: true, email};
     }
   }

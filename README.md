@@ -9,11 +9,11 @@ Newsletter subscription management for [Loops](https://loops.so/).
 - Localization support
 - reCAPTCHA v2/v3 validation
 - CORS enabled
-- Deployable as netlify functions
+- Deployable as Netlify functions
 
 ## Roadmap
 
-- [ ] [https://www.hcaptcha.com/] support
+- [ ] [hCaptcha](https://www.hcaptcha.com/) support
 - [ ] Subscription token rotation/refresh
 - [ ] Loops configuration verification
 
@@ -38,51 +38,60 @@ npm run prebuild
 npm run dev
 ```
 
-Sample subscription form will be available at: `http://localhost:8888/`
+A sample subscription form will be available at: http://localhost:8888/.
 
 ## Usage
 
 ### Double opt-in on loops
-As of right now (December 2025), the built-in loops mechanism for e-mail confirmation ([Double opt-in](https://loops.so/docs/contacts/double-opt-in)) is only supported when subscribing through forms.
-API can read the `optInStatus` but cannot update it.
+Currently (January 2026), the built-in loops mechanism for email confirmation ([Double opt-in](https://loops.so/docs/contacts/double-opt-in)) is only supported when subscribing through forms.
+The Loops API can read the `optInStatus` but cannot update it.
 
-Check https://loops.so/docs/api-reference/changelog
+Check the [Loops API changelog](https://loops.so/docs/api-reference/changelog) for updates.
 
-Instead, carajillo will use its own mechanism with custom `xOptInStatus` property.
-It will search for transactional e-mail with `xOptInUrl` data variable.
+Instead, Carajillo uses its own mechanism with a custom `xOptInStatus` property.
+It searches for transactional emails with the `xOptInUrl` data variable.
 You can translate confirmation emails into multiple languages.
-Carajillo will try to find the right translation by email name.
+Carajillo tries to find the right translation by email name.
 
-Go to https://app.loops.so/transactional and create confirmation e-mails for each language you need supported.
-Add a tag with the language code in the email. For example, for English name the email `Double Opt-In #EN`.
-Use following data variables:
+Go to the [Loops transactional email settings](https://app.loops.so/transactional)
+and create confirmation emails for each language you need to support.
+Add a tag with the language code in the email name.
+For example, for English, name the email `Double Opt-In #EN`.
+
+Use the following data variables:
  - `xOptInUrl` (required) — for button to confirm the subscription,
- - `companyName`
- - `companyAddress`
+ - `companyName`,
+ - `companyAddress`,
  - `companyLogo`.
 
 ### Including form
 
+Create a form with class `carajillo subscribe-form`.
+The form action does not matter.
+You can point the action to any honeypot service to monitor spammers or leave it empty. 
+The only required field is `email`.
+You can use other fields to configure contact properties [the same way as in Loops](https://loops.so/docs/forms/custom-form#create-a-form).
+
+Example:
 ```html
-<form class="subscribe-form" action="https://carajillo.example.com/api/honeypot">
+<form class="carajillo subscribe-form" action="https://carajillo.example.com/api/honeypot">
   <input type="text" name="firstName" placeholder="Name">
   <input type="email" name="email" placeholder="Email" required>
   <input type="hidden" name="mailingLists" value="comma, delimited, mailingListIds">
   <input type="hidden" name="language" value="en">
   <input type="submit" value="Submit">
   <div class="subscribe-status"></div>
-  <noscript><p>Enable Javascript in your browser to subscribe.</p></noscript>
+  <noscript><p>Enable JavaScript in your browser to subscribe.</p></noscript>
 </form>
 <script src="https://carajillo.example.com/subscribe.js"></script>
 ```
 
 ## Architecture
 
-Principles:
+Architecture Principles:
 
-1. It has to prevent bots from subscribing to e-mails: CAPTCHA + confirmation e-mail
-2. Should we relax the requirement for e-mail confirmation when CAPTCHA score is high?
-3. The agent should be stateless. The user flow should be authorized by time-limited [JWT](https://datatracker.ietf.org/doc/html/rfc7519)
+1. Bot prevention through CAPTCHA validation and email confirmation
+2. The service should be stateless. The user flow is authorized by time-limited [JWT](https://datatracker.ietf.org/doc/html/rfc7519) tokens
 
 ### Use cases
 
@@ -122,24 +131,24 @@ sequenceDiagram
     end
 
     alt Contact does not exist
-      carajillo ->>+ Loops: Find contact by e-mail
+      carajillo ->>+ Loops: Find contact by email
       Loops -->>- carajillo: empty contact list
-      carajillo ->>+ Loops: 🆕 Create contact (e-mail, language, captcha score...)
+      carajillo ->>+ Loops: 🆕 Create contact (email, language, captcha score...)
       Loops -->>- carajillo: New contact id
     else Contact exists
-      carajillo ->>+ Loops: Find contact by e-mail
+      carajillo ->>+ Loops: Find contact by email
       Loops -->>- carajillo: contact id + optInStatus (one of: "pending", "accepted", "rejected" or null)
     end
-    carajillo ->>+ Loops: 📨 Send confirmation e-mail<br/>transactionalId, JWT
-    Loops ->> MailServer: 📨 Confirmation e-mail
+    carajillo ->>+ Loops: 📨 Send confirmation email<br/>transactionalId, JWT
+    Loops ->> MailServer: 📨 Confirmation email
     activate MailServer
-    Loops -->>- carajillo: e-mail sent
+    Loops -->>- carajillo: email sent
 
   carajillo -->> UserAgent: OK
   deactivate carajillo
-  UserAgent ->>+ User: Prompt to check e-mail
+  UserAgent ->>+ User: Prompt to check email
 
-  User ->>- MailServer: Open e-mail, click confirmation link
+  User ->>- MailServer: Open email, click confirmation link
   MailServer ->> UserAgent: 🔗 Confirmation link
   deactivate MailServer
   activate UserAgent
@@ -210,3 +219,7 @@ stateDiagram-v2
 ├── lit-localize.json            # Translation settings
 └── README.md                    # This file
 ```
+
+## License
+
+This project is licensed under the GPL-3.0-or-later License - see the [LICENSE](LICENSE) file for details.

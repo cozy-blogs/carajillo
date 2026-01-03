@@ -107,7 +107,7 @@ router.put("/subscription", authenticateRateLimiter, async (req, res) => {
     throw new HttpError({
       statusCode: 403,
       message: "Forbidden",
-      details: "E-mail address from request does not match JWT."
+      details: "Email address from request does not match JWT."
     });
   }
   const response = await updateSubscription(request);
