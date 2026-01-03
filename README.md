@@ -66,7 +66,7 @@ Use the following data variables:
 
 ### Including form
 
-Create a form with class `carajillo subscribe-form`.
+Create a form with class `carajillo`.
 The form action does not matter.
 You can point the action to any honeypot service to monitor spammers or leave it empty. 
 The only required field is `email`.
@@ -74,13 +74,12 @@ You can use other fields to configure contact properties [the same way as in Loo
 
 Example:
 ```html
-<form class="carajillo subscribe-form" action="https://carajillo.example.com/api/honeypot">
+<form class="carajillo" action="https://carajillo.example.com/api/honeypot">
   <input type="text" name="firstName" placeholder="Name">
   <input type="email" name="email" placeholder="Email" required>
   <input type="hidden" name="mailingLists" value="comma, delimited, mailingListIds">
   <input type="hidden" name="language" value="en">
   <input type="submit" value="Submit">
-  <div class="subscribe-status"></div>
   <noscript><p>Enable JavaScript in your browser to subscribe.</p></noscript>
 </form>
 <script src="https://carajillo.example.com/subscribe.js"></script>
