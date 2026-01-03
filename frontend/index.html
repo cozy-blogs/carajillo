@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title><%= htmlWebpackPlugin.options.title %></title>
     <style>
-      .subscribe-form {
+      .carajillo {
         display: flex;
         flex-direction: column;
         gap: 10px;
         max-width: 400px;
       }
-      .subscribe-form input {
+      .carajillo input {
         width: 100%;
         padding: 10px;
         box-sizing: border-box;
         border: 1px solid #ccc;
         border-radius: 5px;
       }
-      .subscribe-form input[type="submit"] {
+      .carajillo input[type="submit"] {
         background-color: #000;
         color: #fff;
         border: none;
@@ -27,16 +27,16 @@
         box-sizing: border-box;
         cursor: pointer;
       }
-      .subscribe-form input[type="submit"]:hover {
+      .carajillo input[type="submit"]:hover {
         background-color: #333;
       }
-      .subscribe-form input[type="submit"]:active {
+      .carajillo input[type="submit"]:active {
         background-color: #555;
       }
-      .subscribe-form input[type="submit"]:focus {
+      .carajillo input[type="submit"]:focus {
         outline: none;
       }
-      .subscribe-status {
+      .carajillo .subscribe-status {
         width: 100%;
       }
     </style>
@@ -44,12 +44,11 @@
   <body>
     <h1>Subscribe to newsletter</h1>
     <p>Subscribe to our newsletter to get the latest news and updates.</p>
-    <form action="/api/honeypot" method="post" class="subscribe-form">
+    <form action="/api/honeypot" method="post" class="carajillo">
       <input type="text" name="firstName" placeholder="Name">
       <input type="email" name="email" placeholder="Email" required>
       <input type="hidden" name="language" value="pl">
       <input type="submit" value="Submit">
-      <div class="subscribe-status"></div>
       <noscript><p>Enable Javascript in your browser to subscribe.</p></noscript>
     </form>
   </body>
