@@ -25,7 +25,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prepublishOnly": "npm run check && npm test && npm run build"
+    "prestart": "npm run prebuild",
+    "prepublishOnly": "npm run prebuild && npm run check && npm test && npm run build"
   },
   "keywords": [
     "netlify",

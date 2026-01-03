@@ -6,10 +6,7 @@ This document outlines the steps to publish the Carajillo package to npm.
 
 1. **npm account**: Create an account at [npmjs.com](https://www.npmjs.com/)
 2. **GitHub repository**: Push your code to GitHub
-3. **npm token**: Generate an npm access token:
-   - Go to https://www.npmjs.com/settings/YOUR_USERNAME/tokens
-   - Create a new "Automation" token
-   - Copy the token
+3. **Configure [trusted publishing](https://docs.npmjs.com/trusted-publishers)**: Once npm package is cerated
 
 ## Setup Steps
 
@@ -34,15 +31,7 @@ Also update:
 - `CHANGELOG.md`: Replace `YOUR_USERNAME` with your GitHub username
 - `.github/dependabot.yml`: Update the reviewer if needed
 
-### 2. Configure GitHub Secrets
-
-1. Go to your GitHub repository
-2. Navigate to **Settings** → **Secrets and variables** → **Actions**
-3. Add a new secret:
-   - **Name**: `NPM_TOKEN`
-   - **Value**: Your npm access token
-
-### 3. Verify Package Configuration
+### 2. Verify Package Configuration
 
 ```bash
 # Check package.json is valid
@@ -52,14 +41,9 @@ npm pack --dry-run
 npm pack
 ```
 
-### 4. Test Locally
+### 3. Test Locally
 
 ```bash
-# Run all checks
-npm run check
-npm test
-npm run build
-
 # Test the prepublish script
 npm run prepublishOnly
 ```
@@ -139,4 +123,3 @@ Follow [Semantic Versioning](https://semver.org/):
 - Monitor security advisories
 - Update `CHANGELOG.md` for each release
 - Keep documentation up to date
-
