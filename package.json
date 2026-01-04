@@ -1,6 +1,6 @@
 {
   "name": "carajillo",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Newsletter subscription management for Loops",
   "main": "backend/api.ts",
   "files": [
@@ -13,20 +13,21 @@
     "LICENSE"
   ],
   "scripts": {
-    "prebuild": "npm run build:openapi && npm run build:localize",
-    "build": "webpack",
+    "build": "npm run build:localize && npm run build:openapi && npm run build:webpack",
+    "build:webpack": "webpack",
     "build:localize": "lit-localize build",
     "build:openapi": "node scripts/generate-openapi-spec.js",
     "dev": "NODE_ENV=development netlify dev -c 'webpack --watch'",
     "dev:localize": "lit-localize extract",
-    "check": "npm run check:types && npm run check:openapi",
-    "check:types": "tsc --noEmit",
-    "check:openapi": "validate-api backend/openapi.yaml",
-    "test": "jest",
+    "test": "npm run test:types && npm run test:openapi && npm run test:testsuite",
+    "test:testsuite": "jest",
+    "test:types": "tsc --noEmit",
+    "test:openapi": "validate-api backend/openapi.yaml",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prestart": "npm run prebuild",
-    "prepublishOnly": "npm run prebuild && npm run check && npm test && npm run build"
+    "prestart": "npm run build:localize && npm run build:openapi",
+    "pretest": "npm run build:localize && npm run build:openapi",
+    "prepublishOnly": "npm test && npm run build"
   },
   "keywords": [
     "netlify",

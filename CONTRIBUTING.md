@@ -38,7 +38,6 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 3. **Run tests and checks**
    ```bash
-   npm run check    # Type checking
    npm test         # Run tests
    npm run build    # Ensure build works
    ```
