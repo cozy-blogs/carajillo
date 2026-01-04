@@ -34,11 +34,11 @@ jobs:
       
       - name: Publish to npm
         if: github.event_name == 'release'
-        run: npm publish
+        run: npm publish --access public
       
       - name: Publish to npm (manual)
         if: github.event_name == 'workflow_dispatch'
         run: |
           npm version ${{ github.event.inputs.version }} --no-git-tag-version
-          npm publish
+          npm publish --access public
 
