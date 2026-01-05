@@ -50,10 +50,6 @@
   <source>Missing authorization token</source>
   <target>Brakujący token uwierzytelniania</target>
 </trans-unit>
-<trans-unit id="s55b02a24911edb75">
-  <source>Cannot retrieve reCAPTCHA site key</source>
-  <target>Nie można pobrać klucza witryny reCAPTCHA</target>
-</trans-unit>
 <trans-unit id="sa92333d7aaa088a8">
   <source>reCAPTCHA site key not loaded</source>
   <target>Klucz witryny reCAPTCHA nie został załadowany</target>
@@ -77,6 +73,18 @@
 <trans-unit id="sd5a4ff84a58f750b">
   <source>Something went wrong. Try again later.</source>
   <target>Ups! Coś poszło nie tak. Spróbuj ponownie później.</target>
+</trans-unit>
+<trans-unit id="s7c6e3b721be2127a">
+  <source>Cannot retrieve CAPTCHA configuration: <x id="0" equiv-text="${data.error}"/></source>
+  <target>Nie można pobrać konfiguracji CAPTCHA: <x id="0" equiv-text="${data.error}"/></target>
+</trans-unit>
+<trans-unit id="s1a4f837f7d970cf0">
+  <source>Cannot retrieve CAPTCHA site key</source>
+  <target>Nie można pobrać klucza CAPTCHA</target>
+</trans-unit>
+<trans-unit id="sbae4e97fe4f24dda">
+  <source>Cannot retrieve CAPTCHA configuration</source>
+  <target>Nie można pobrać konfiguracji CAPTCHA</target>
 </trans-unit>
 </body>
 </file>

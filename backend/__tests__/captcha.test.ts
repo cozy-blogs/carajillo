@@ -1,7 +1,6 @@
-import { configuration, verifyCaptcha, sendVerificationRequest } from '../recaptcha';
+import { configuration, verifyCaptcha, sendVerificationRequest } from '../captcha';
 import { HttpError } from '../error';
 
-// Mock node-fetch before importing recaptcha
 jest.mock('node-fetch', () => {
   return jest.fn();
 });
@@ -9,7 +8,7 @@ jest.mock('node-fetch', () => {
 import fetch from 'node-fetch';
 const mockedFetch = fetch as jest.MockedFunction<typeof fetch>;
 
-describe('recaptcha', () => {
+describe('captcha', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -172,8 +171,8 @@ describe('recaptcha', () => {
       jest.resetModules();
       
       // Re-import the module with new env
-      const recaptchaModule = await import('../recaptcha');
-      const result = await recaptchaModule.verifyCaptcha('subscribe', 'any-token');
+      const captchaModule = await import('../captcha');
+      const result = await captchaModule.verifyCaptcha('subscribe', 'any-token');
       
       expect(result).toBe(true);
     });
@@ -210,9 +209,9 @@ describe('recaptcha', () => {
       delete process.env.RECAPTCHA_SECRET;
       
       jest.resetModules();
-      const recaptchaModule = await import('../recaptcha');
-      
-      await expect(recaptchaModule.sendVerificationRequest('test-token')).rejects.toThrow('Server configuration error');
+      const captchaModule = await import('../captcha');
+
+      await expect(captchaModule.sendVerificationRequest('test-token')).rejects.toThrow('Server configuration error');
       
       process.env.RECAPTCHA_SECRET = originalSecret;
     });
@@ -228,7 +227,7 @@ describe('recaptcha', () => {
       await expect(sendVerificationRequest('test-token')).rejects.toThrow('reCAPTCHA API returned status 500');
     });
 
-    it('should throw HttpError when reCAPTCHA returns success: false', async () => {
+    it('should throw HttpError when CAPTCHA returns success: false', async () => {
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({

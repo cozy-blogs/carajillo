@@ -4,10 +4,10 @@ Newsletter subscription management for [Loops](https://loops.so/).
 
 ## Features
 
-- Double opt-in subscription — a replacement for [Loops built-in](https://loops.so/docs/contacts/double-opt-in)
+- Double opt-in subscription — a replacement for [Loops built-in mechanizm](https://loops.so/docs/contacts/double-opt-in)
 - Panel for users to manage mailing list subscription
 - Localization support
-- reCAPTCHA v2/v3 validation
+- reCAPTCHA v3 validation
 - CORS enabled
 - Deployable as Netlify functions
 

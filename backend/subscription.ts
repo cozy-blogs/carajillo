@@ -1,13 +1,13 @@
 import { Request } from 'express';
 import { HttpError } from './error';
-import { verifyCaptcha } from './recaptcha';
+import { verifyCaptcha } from './captcha';
 import { findContact, upsertContact, sendConfirmationMail, subscribeContact, unsubscribeContact, getMailingLists } from './loops';
 import { createToken } from './jwt';
 
 export type SubscribeRequest = {
   email : string;
   language?: string;
-  captchaToken: string;
+  captchaToken?: string;
   mailingLists: string[];
   referer?: string;
 } & Record<string, string>;
@@ -21,15 +21,17 @@ export type SubscribeRequest = {
  */
 export async function subscribe(req: Request) {
   const request = req.body as SubscribeRequest;
-  console.info(`subscribe: ${JSON.stringify(request)}`);
-  
+  const remoteIp = req.ip;
   const rootUrl = new URL(`${req.protocol}://${req.hostname}`);
-  /// @todo make captcha_token optional
+  if (request.language === undefined) {
+    request.language = req.acceptsLanguages().shift();
+  }
+
+  console.info(`subscribe: ${JSON.stringify(request)} from ${remoteIp} to ${rootUrl}`);
 
   const {email, mailingLists, captchaToken, ...properties} = request;
-  /// @todo set default language from the Accept-Language header
 
-  const valid = await verifyCaptcha('subscribe', captchaToken);
+  const valid = await verifyCaptcha('subscribe', captchaToken, remoteIp);
   if (!valid) {
     throw new HttpError({
       statusCode: 429,

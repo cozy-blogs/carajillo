@@ -19,7 +19,7 @@ export function configuration() : CaptchaConfiguration {
 }
 
 interface CaptchaProvider {
-  (action: string, token: string): Promise<boolean>;
+  (action: string, token?: string, remoteIp?: string): Promise<boolean>;
 }
 export const verifyCaptcha = getCaptchaProvider(PROVIDER);
 
@@ -28,7 +28,7 @@ function getCaptchaProvider(provider: Provider): CaptchaProvider {
     case 'recaptcha':
       return verifyRecaptchaToken;
     case 'none':
-      return async (action: string, token: string) => { return true; };
+      return async (action: string, token?: string, remoteIp?: string) => { return true; };
     default:
       throw new Error(`unsupported CAPTCHA provider: ${provider}`);
   }
@@ -51,17 +51,37 @@ interface RecaptchaResponse {
  * @param token  CAPTCHA token preseneted by User Agent
  * @returns true if user passed the test (score >= CAPTCHA_THRESHOLD)
  */
-async function verifyRecaptchaToken(action: string, token: string): Promise<boolean> {
-  const captcha = await sendVerificationRequest(token);
+async function verifyRecaptchaToken(action: string, token?: string, remoteIp?: string): Promise<boolean> {
+  if (!token) {
+    throw new HttpError({
+      statusCode: 400,
+      message: 'Bad request',
+      reason: 'missing-captcha-token',
+      details: 'CAPTCHA token is required',
+    });
+  }
+
+  const captcha = await sendVerificationRequest(token, remoteIp);
   console.info(`CAPTCHA: score=${captcha.score} action=${captcha.action} challenge_ts=${captcha.challenge_ts} hostname=${captcha.hostname}`);
 
   if (captcha['error-codes']) {
+    // ReCAPTCHA or hCaptcha common error codes:
     // missing-input-secret   - The secret parameter is missing.
     // invalid-input-secret   - The secret parameter is invalid or malformed.
     // missing-input-response - The response parameter is missing.
     // invalid-input-response - The response parameter is invalid or malformed.
     // bad-request            - The request is invalid or malformed.
+
+    // ReCAPTCHA specific error codes:
     // timeout-or-duplicate   - The response is no longer valid: either is too old or has been used previously.
+
+    // hCaptcha specific error codes:
+    // expired-input-response   - The response parameter (verification token) is expired. (120s default)
+    // already-seen-response    - The response parameter (verification token) was already verified once.
+    // missing-remoteip         - The remoteip parameter is missing.
+    // invalid-remoteip         - The remoteip parameter is not a valid IP address or blinded value.
+    // not-using-dummy-passcode - You have used a testing sitekey but have not used its matching secret.
+    // sitekey-secret-mismatch  - The sitekey is not registered with the provided secret.
     console.error(`CAPTCHA error codes: ${captcha['error-codes']?.join(', ')}`);
     const errorCodes :string[] = captcha['error-codes'];
     if (errorCodes.includes('invalid-input-response')) {
@@ -112,20 +132,27 @@ async function verifyRecaptchaToken(action: string, token: string): Promise<bool
  * @param token  reCAPTCHA token
  * @return reCAPTCHA REST API response
  */
-export async function sendVerificationRequest(token: string): Promise<RecaptchaResponse> {
+export async function sendVerificationRequest(token: string, remoteIp?: string): Promise<RecaptchaResponse> {
   if (!SECRET) {
     console.error('RECAPTCHA_SECRET environment variable is not set');
     throw new Error('Server configuration error');
   }
 
   const verifyUrl = `https://www.google.com/recaptcha/api/siteverify`;
+  const body = new URLSearchParams({
+    secret: SECRET,
+    response: token,
+  });
+  if (remoteIp) {
+    body.set('remoteip', remoteIp);
+  }
   const response = await fetch(verifyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Accept': 'application/json',
     },
-    body: `secret=${SECRET}&response=${token}`,
+    body: body.toString(),
   });
 
   if (!response.ok) {

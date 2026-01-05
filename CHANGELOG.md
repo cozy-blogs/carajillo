@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Double opt-in subscription flow
 - Panel for users to manage mailing list subscription
 - Localization support
-- reCAPTCHA v2/v3 validation
+- reCAPTCHA v3 validation
 - CORS enabled
 - Deployable as netlify functions
 - Comprehensive test suite
