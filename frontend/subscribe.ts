@@ -1,18 +1,19 @@
 import { apiRoot } from "./context";
 import { initializeLocale } from "./localize";
 import { msg, str } from '@lit/localize';
+import { Captcha, createCaptcha } from "./captcha";
 
-let recaptchaSiteKey: string | null = null;
 type SubscriptionStatus = 'expecting' | 'in-progress' | 'try-again' | 'awaiting-confirmation' | 'success' | 'failed';
+
+let captcha: Captcha | null = null;
 
 export async function main() {
   await domReady();
-  await initializeLocale();
   
   try {
-    recaptchaSiteKey = await getCaptchaSiteKey();
-    await loadCaptcha(recaptchaSiteKey);
-    await initialize();
+    await initializeLocale();
+    captcha = await createCaptcha();
+    await initializeForms();
   } catch (error) {
     document.querySelectorAll<HTMLFormElement>("form.carajillo").forEach((form) => {
       const message = (error instanceof Error) ? error.message : msg('Something went wrong. Try again later.');
@@ -30,7 +31,7 @@ function domReady() {
   });
 }
 
-async function initialize() {
+async function initializeForms() {
   document.querySelectorAll<HTMLFormElement>("form.carajillo").forEach(function(form) {
     initSubscriptionForm(form);
   });
@@ -49,7 +50,7 @@ function initSubscriptionForm(form: HTMLFormElement) {
 
     const {status, message, email} = await submitSubscription(form);
     if (status === 'awaiting-confirmation' && email) {
-      updateStatus(form, 'awaiting-confirmation', createConfirmationLink(email));
+      updateStatus(form, 'awaiting-confirmation', createConfirmationLink(email, message));
     } else {
       updateStatus(form, status, message);
     }
@@ -58,7 +59,9 @@ function initSubscriptionForm(form: HTMLFormElement) {
 
 async function submitSubscription(form: HTMLFormElement): Promise<{status: SubscriptionStatus; message: string; email?: string}> {
   const data = formDataObject(form);
-  data.captchaToken = await getCaptchaToken('subscribe');
+  if (captcha !== null) {
+    data.captchaToken = await captcha.getToken('subscribe');
+  }
 
   try {
     const response = await fetch(`${apiRoot}/subscription`, {
@@ -106,47 +109,6 @@ function formDataObject(form: HTMLFormElement): Record<string, string | string[]
   return Object.fromEntries(entries);
 }
 
-async function getCaptchaSiteKey(): Promise<string> {
-  const response = await fetch(`${apiRoot}/captcha`, {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-    }
-  });
-  if (response.ok) {
-    const data : {success: boolean; provider: string, site_key: string} = await response.json();
-    if (typeof data.site_key !== 'string')
-      throw new Error(msg('Cannot retrieve reCAPTCHA site key'));
-    return data.site_key;
-  } else {
-    throw new Error(msg('Cannot retrieve reCAPTCHA site key'));
-  }
-}
-
-function loadCaptcha(siteKey: string) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.addEventListener('load', resolve);
-    script.addEventListener('error', reject);
-    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
-    script.defer = true;
-    script.async = true;
-    document.head.appendChild(script);
-  });
-}
-
-function getCaptchaToken(action: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!recaptchaSiteKey) {
-      reject(new Error(msg('reCAPTCHA site key not loaded')));
-      return;
-    }
-    grecaptcha.ready(() => {
-      grecaptcha.execute(recaptchaSiteKey!, {action}).then(resolve, reject);
-    });
-  });
-}
-
 function updateStatus(form: HTMLFormElement, status: SubscriptionStatus, message: string | HTMLElement | null): HTMLElement {
   form.dataset.status = status;
   let statusElement = form.querySelector<HTMLElement>(".subscribe-status");
@@ -165,12 +127,12 @@ function updateStatus(form: HTMLFormElement, status: SubscriptionStatus, message
   return statusElement;
 }
 
-function createConfirmationLink(email: string): HTMLAnchorElement {
+function createConfirmationLink(email: string, message: string): HTMLAnchorElement {
   const domain = email.replace(/.*@/, "");
   const link = document.createElement("a");
   link.href = `https://${domain}/`;
   link.target = "_blank";
-  link.innerText = msg(`Confirm subscription`);
+  link.innerText = message;
   return link;
 }
 

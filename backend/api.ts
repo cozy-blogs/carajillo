@@ -8,7 +8,7 @@ import { authenticate } from "./jwt";
 import { subscribe, getSubscription, updateSubscription } from "./subscription"
 import type { SubscribeRequest, UpdateSubscriptionRequest } from "./subscription";
 import { getMailingLists } from "./loops";
-import { configuration as captchaConfiguration } from "./recaptcha";
+import { configuration as captchaConfiguration } from "./captcha";
 import rateLimit from "express-rate-limit";
 import ms from "ms";
 

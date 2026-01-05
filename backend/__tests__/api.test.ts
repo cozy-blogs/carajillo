@@ -7,13 +7,13 @@ import request from 'supertest';
 import { app } from '../api';
 import * as subscription from '../subscription';
 import * as loops from '../loops';
-import * as recaptcha from '../recaptcha';
+import * as captcha from '../captcha';
 import * as jwt from '../jwt';
 import { HttpError } from '../error';
 
 jest.mock('../subscription');
 jest.mock('../loops');
-jest.mock('../recaptcha');
+jest.mock('../captcha');
 jest.mock('../jwt');
 
 describe('API routes', () => {
@@ -67,7 +67,7 @@ describe('API routes', () => {
 
   describe('GET /api/captcha', () => {
     it('should return CAPTCHA configuration', async () => {
-      (recaptcha.configuration as jest.Mock).mockReturnValue({
+      (captcha.configuration as jest.Mock).mockReturnValue({
         success: true,
         provider: 'recaptcha',
         site_key: 'test-site-key',

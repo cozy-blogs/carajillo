@@ -251,7 +251,6 @@ components:
       type: object
       required:
         - email
-        - captchaToken
       properties:
         email:
           type: string
@@ -260,7 +259,9 @@ components:
           example: "user@example.com"
         captchaToken:
           type: string
-          description: CAPTCHA response token from client
+          description: >
+            CAPTCHA response token from client.
+            Required when CAPTCHA is enabled by the service configuration.
         mailingLists:
           type: array
           items:

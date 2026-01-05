@@ -5,11 +5,11 @@ jest.mock('node-fetch', () => {
 
 import { subscribe, getSubscription, updateSubscription, SubscribeRequest } from '../subscription';
 import { HttpError } from '../error';
-import * as recaptcha from '../recaptcha';
+import * as captcha from '../captcha';
 import * as loops from '../loops';
 import * as jwt from '../jwt';
 
-jest.mock('../recaptcha');
+jest.mock('../captcha');
 jest.mock('../loops');
 jest.mock('../jwt');
 
@@ -32,6 +32,7 @@ describe('subscription', () => {
       body,
       protocol: 'https',
       hostname: 'example.com',
+      ip: '192.168.1.1',
       get: jest.fn((header: string) => {
         if (header === 'host') return 'example.com';
         return undefined;
@@ -39,7 +40,7 @@ describe('subscription', () => {
     } as any);
 
     it('should successfully subscribe new contact', async () => {
-      (recaptcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
+      (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
       (loops.upsertContact as jest.Mock).mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
@@ -58,14 +59,14 @@ describe('subscription', () => {
         doubleOptIn: true,
         email: 'test@example.com',
       });
-      expect(recaptcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token');
+      expect(captcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token', '192.168.1.1');
       expect(loops.upsertContact).toHaveBeenCalled();
       expect(loops.sendConfirmationMail).toHaveBeenCalledWith('test@example.com', new URL('https://example.com/control-panel?token=jwt-token&lang=en'), 'en');
     });
 
     it('should throw HttpError when CAPTCHA verification fails', async () => {
       // Ensure the mock is set up correctly
-      (recaptcha.verifyCaptcha as jest.Mock).mockResolvedValueOnce(false);
+      (captcha.verifyCaptcha as jest.Mock).mockResolvedValueOnce(false);
 
       const mockReq = createMockRequest();
       await expect(subscribe(mockReq)).rejects.toThrow();
@@ -79,11 +80,11 @@ describe('subscription', () => {
       }
       
       // Verify verifyCaptcha was called
-      expect(recaptcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token');
+      expect(captcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token', '192.168.1.1');
     });
 
     it('should throw HttpError when contact has rejected optInStatus', async () => {
-      (recaptcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
+      (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
       (loops.upsertContact as jest.Mock).mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
@@ -103,7 +104,7 @@ describe('subscription', () => {
     });
 
     it('should not send email when contact is already subscribed to all requested lists', async () => {
-      (recaptcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
+      (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
       (loops.upsertContact as jest.Mock).mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
@@ -120,7 +121,7 @@ describe('subscription', () => {
     });
 
     it('should send email when contact is accepted but missing some mailing lists', async () => {
-      (recaptcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
+      (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
       (loops.upsertContact as jest.Mock).mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
