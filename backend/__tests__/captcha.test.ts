@@ -16,7 +16,9 @@ describe('captcha', () => {
     process.env = { ...originalEnv };
     process.env.CAPTCHA_PROVIDER = 'recaptcha';
     process.env.RECAPTCHA_SITE_KEY = 'test-site-key';
-    process.env.RECAPTCHA_SECRET = 'test-secret';
+    process.env.RECAPTCHA_SECRET = 'test-recaptcha-secret';
+    process.env.HCAPTCHA_SITE_KEY = 'test-hcaptcha-site-key';
+    process.env.HCAPTCHA_SECRET = 'test-hcaptcha-secret';
     process.env.CAPTCHA_THRESHOLD = '0.5';
   });
 
@@ -65,9 +67,11 @@ describe('captcha', () => {
         'https://www.google.com/recaptcha/api/siteverify',
         expect.objectContaining({
           method: 'POST',
-          body: expect.stringContaining('secret=') && expect.stringContaining('&response=test-token'),
+          body: expect.stringContaining(`secret=${process.env.RECAPTCHA_SECRET}`),
         })
       );
+      const requestBody = (mockedFetch.mock.calls[0][1] as any).body as string;
+      expect(requestBody).toContain('response=test-token');
     });
 
     it('should return false when score is below threshold', async () => {
@@ -87,6 +91,65 @@ describe('captcha', () => {
       const result = await verifyCaptcha('subscribe', 'test-token');
 
       expect(result).toBe(false);
+    });
+
+    it('should return true when provider is "hcaptcha"', async () => {
+      process.env.CAPTCHA_PROVIDER = 'hcaptcha';
+      jest.resetModules();
+      const { default: nodeFetch } = await import('node-fetch');
+      const freshFetch = nodeFetch as jest.MockedFunction<typeof fetch>;
+      const captchaModule = await import('../captcha');
+
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          challenge_ts: '2024-01-01T00:00:00Z',
+          hostname: 'example.com',
+        }),
+      };
+
+      freshFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await captchaModule.verifyCaptcha('subscribe', 'test-token');
+
+      expect(result).toBe(true);
+      expect(freshFetch).toHaveBeenCalledWith(
+        'https://api.hcaptcha.com/siteverify',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('secret=test-hcaptcha-secret'),
+        }),
+      );
+      const requestBody = (freshFetch.mock.calls[0][1] as any).body as string;
+      expect(requestBody).toContain('response=test-token');
+    });
+
+    it('should throw HttpError for invalid-input-response error on hcaptcha', async () => {
+      process.env.CAPTCHA_PROVIDER = 'hcaptcha';
+      jest.resetModules();
+      const { default: nodeFetch } = await import('node-fetch');
+      const freshFetch = nodeFetch as jest.MockedFunction<typeof fetch>;
+      const { HttpError: FreshHttpError } = await import('../error');
+      const captchaModule = await import('../captcha');
+
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          'error-codes': ['invalid-input-response'],
+        }),
+      };
+
+      freshFetch.mockResolvedValue(mockResponse as any);
+
+      await expect(captchaModule.verifyCaptcha('subscribe', 'test-token')).rejects.toThrow(FreshHttpError);
+      try {
+        await captchaModule.verifyCaptcha('subscribe', 'test-token');
+      } catch (error) {
+        expect(error).toBeInstanceOf(FreshHttpError);
+        expect((error as any).statusCode).toBe(400);
+      }
     });
 
     it('should throw HttpError when action does not match', async () => {

@@ -3,6 +3,8 @@
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-jwt-signing';
 process.env.RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET || 'test-recaptcha-secret';
 process.env.RECAPTCHA_SITE_KEY = process.env.RECAPTCHA_SITE_KEY || 'test-site-key';
+process.env.HCAPTCHA_SECRET = process.env.HCAPTCHA_SECRET || 'test-hcaptcha-secret';
+process.env.HCAPTCHA_SITE_KEY = process.env.HCAPTCHA_SITE_KEY || 'test-hcaptcha-site-key';
 process.env.CAPTCHA_PROVIDER = process.env.CAPTCHA_PROVIDER || 'recaptcha';
 process.env.CAPTCHA_THRESHOLD = process.env.CAPTCHA_THRESHOLD || '0.5';
 process.env.LOOPS_SO_SECRET = process.env.LOOPS_SO_SECRET || 'test-loops-api-key';
