@@ -1,9 +1,11 @@
 import { apiRoot } from "./context";
 import { msg, str } from '@lit/localize';
+import { html, TemplateResult } from 'lit';
 
 export interface Captcha {
   initialize(): Promise<void>
   getToken(action: string): Promise<string>;
+  disclaimer(): TemplateResult;
 };
 
 interface CaptchaConfiguration {
@@ -42,6 +44,9 @@ export async function createCaptcha(): Promise<Captcha> {
     case 'recaptcha':
       captcha = new Recaptcha(configuration.siteKey);
       break;
+    case 'hcaptcha':
+      captcha = new Hcaptcha(configuration.siteKey);
+      break;
     default:
       throw new Error(`Unsupported CAPTCHA provider: ${configuration.provider}`);
   }
@@ -55,6 +60,9 @@ class NoCaptcha implements Captcha {
   }
   getToken(action: string): Promise<string> {
     return Promise.resolve(action);
+  }
+  disclaimer(): TemplateResult {
+    return html``;
   }
 }
 
@@ -84,6 +92,56 @@ class Recaptcha implements Captcha {
       });
     });
   }
-
+  disclaimer(): TemplateResult {
+    return msg(html`This site is protected by reCAPTCHA and its <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a> and <a href="https://policies.google.com/terms" target="_blank">Terms of Service</a> apply.`);
+  }
   private siteKey: string;
+}
+
+class Hcaptcha implements Captcha {
+  constructor(siteKey: string) {
+    this.siteKey = siteKey;
+    this.containerId = `hcaptcha-container-${Math.random().toString(36).substring(2)}`;
+  }
+
+  initialize(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.addEventListener('load', () => {
+        this.container = document.createElement('div');
+        this.container.id = this.containerId;
+        this.container.style.display = 'none';
+        document.body.appendChild(this.container);
+        this.widgetId = (window as any).hcaptcha.render(this.container, {
+          sitekey: this.siteKey,
+          size: 'invisible',
+        });
+        resolve();
+      });
+      script.addEventListener('error', (error) => { reject(error); });
+      script.src = `https://js.hcaptcha.com/1/api.js?render=explicit`;
+      script.defer = true;
+      script.async = true;
+      document.head.appendChild(script);
+    });
+  }
+
+  getToken(action: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      if (!this.widgetId) {
+        reject(new Error(msg('hCaptcha widget not initialized')));
+        return;
+      }
+      (window as any).hcaptcha.execute(this.widgetId, { async: true, action }).then(resolve, reject);
+    });
+  }
+
+  disclaimer(): TemplateResult {
+    return msg(html`This site is protected by hCaptcha and its <a href="https://hcaptcha.com/privacy" target="_blank">Privacy Policy</a> and <a href="https://hcaptcha.com/terms" target="_blank">Terms of Service</a> apply.`);
+  }
+
+  private widgetId: string | null = null;
+  private siteKey: string;
+  private containerId: string;
+  private container: HTMLElement | null = null;
 }
