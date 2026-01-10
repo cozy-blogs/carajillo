@@ -11,7 +11,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/@hcaptcha"
+    ]
   },
   "include": ["frontend/**/*", "backend/**/*"],
   "exclude": ["node_modules", "frontend/dist"]

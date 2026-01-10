@@ -1,0 +1,55 @@
+{
+  "version": "5",
+  "remote": {
+    "https://edge.netlify.com/": "fd941d61d88673d5f28aab283fb86fcc50f08a3bc80ee5470498fcfa88c65cfb",
+    "https://edge.netlify.com/bootstrap/config.ts": "6a2ce0e544e15e8f8883a5c18da5948e37fd0f2619f68cb31f3af53c51817025",
+    "https://edge.netlify.com/bootstrap/context.ts": "e97240232121e2f369f6546ce961490f34d961ea1ea54be3ff09633e3f08373f",
+    "https://edge.netlify.com/bootstrap/cookie.ts": "8b0baae708989ca183c6f3b4ab3d029e6abcbc2e43f93edeb0ff447b3bbc3a05",
+    "https://edge.netlify.com/bootstrap/edge_function.ts": "b8253e86aa83c67341f5cfedeba5049d77fbf84dcab7eceff7566b7728ae9b39",
+    "https://edge.netlify.com/bootstrap/globals/types.ts": "eaa6148ded3121d8dee62dd91c86e7fe76601df0f3ca8d7962243a30f4c8935f"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@lit/context@^1.1.6",
+        "npm:@lit/localize-tools@~0.8.1",
+        "npm:@lit/localize@~0.12.2",
+        "npm:@lit/task@^1.0.3",
+        "npm:@material/web@^2.4.1",
+        "npm:@netlify/functions@^5.1.2",
+        "npm:@seriousme/openapi-schema-validator@^2.7.0",
+        "npm:@types/cors@^2.8.19",
+        "npm:@types/express@^5.0.6",
+        "npm:@types/jest@30",
+        "npm:@types/js-yaml@^4.0.9",
+        "npm:@types/jsonwebtoken@^9.0.10",
+        "npm:@types/node-fetch@^2.6.13",
+        "npm:@types/node@^25.0.3",
+        "npm:@types/supertest@^6.0.3",
+        "npm:cors@^2.8.5",
+        "npm:dotenv@^17.2.3",
+        "npm:express-openapi-validator@^5.6.0",
+        "npm:express-rate-limit@^8.2.1",
+        "npm:express@^5.2.1",
+        "npm:generate-json-webpack-plugin@2",
+        "npm:html-webpack-plugin@^5.6.5",
+        "npm:jest@^30.2.0",
+        "npm:js-confetti@~0.13.1",
+        "npm:js-yaml@^4.1.1",
+        "npm:jsonwebtoken@^9.0.3",
+        "npm:lit@^3.3.2",
+        "npm:loops@^6.0.1",
+        "npm:netlify-cli@^23.13.0",
+        "npm:node-fetch@^3.3.2",
+        "npm:serverless-http@4",
+        "npm:supertest@^7.1.4",
+        "npm:ts-jest@^29.4.6",
+        "npm:ts-loader@^9.5.4",
+        "npm:typescript@^5.9.3",
+        "npm:webpack-cli@^6.0.1",
+        "npm:webpack-dev-server@^5.2.2",
+        "npm:webpack@^5.104.1"
+      ]
+    }
+  }
+}
