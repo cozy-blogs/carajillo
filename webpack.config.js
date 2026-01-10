@@ -11,6 +11,31 @@ const GenerateJsonPlugin = require('generate-json-webpack-plugin');
 // https://webpack.js.org/configuration/dotenv/
 require('dotenv').config();
 
+function generateCaptchaConfig() {
+  switch (process.env.CAPTCHA_PROVIDER || 'none') {
+    case 'none':
+      return {
+        success: true,
+        provider: 'none',
+        site_key: '',
+      };
+    case 'recaptcha':
+      return {
+        success: true,
+        provider: 'recaptcha',
+        site_key: process.env.RECAPTCHA_SITE_KEY,
+      };
+    case 'hcaptcha':
+      return {
+        success: true,
+        provider: 'hcaptcha',
+        site_key: process.env.HCAPTCHA_SITE_KEY,
+      };
+    default:
+      throw new Error(`Unsupported CAPTCHA provider: ${process.env.CAPTCHA_PROVIDER}`);
+  }
+}
+
 module.exports = {
   mode: process.env.NODE_ENV === 'develepoment' ? 'development' : 'production',
   entry: {
@@ -38,11 +63,7 @@ module.exports = {
       template: 'frontend/404.html',
       chunks: [],
     }),
-    new GenerateJsonPlugin('api/captcha', {
-      success: true,
-      provider: process.env.CAPTCHA_PROVIDER,
-      site_key: process.env.RECAPTCHA_SITE_KEY,
-    }),
+    new GenerateJsonPlugin('api/captcha', generateCaptchaConfig()),
   ],
   module: {
     rules: [

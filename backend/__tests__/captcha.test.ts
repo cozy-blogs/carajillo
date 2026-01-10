@@ -256,7 +256,7 @@ describe('captcha', () => {
 
       mockedFetch.mockResolvedValue(mockResponse as any);
 
-      const result = await sendVerificationRequest('test-token');
+      const result = await sendVerificationRequest('recaptcha', 'test-token');
 
       expect(result).toEqual({
         success: true,
@@ -274,7 +274,7 @@ describe('captcha', () => {
       jest.resetModules();
       const captchaModule = await import('../captcha');
 
-      await expect(captchaModule.sendVerificationRequest('test-token')).rejects.toThrow('Server configuration error');
+      await expect(captchaModule.sendVerificationRequest('recaptcha', 'test-token')).rejects.toThrow('Server configuration error');
       
       process.env.RECAPTCHA_SECRET = originalSecret;
     });
@@ -287,7 +287,7 @@ describe('captcha', () => {
 
       mockedFetch.mockResolvedValue(mockResponse as any);
 
-      await expect(sendVerificationRequest('test-token')).rejects.toThrow('reCAPTCHA API returned status 500');
+      await expect(sendVerificationRequest('recaptcha', 'test-token')).rejects.toThrow('CAPTCHA API returned status 500');
     });
 
     it('should throw HttpError when CAPTCHA returns success: false', async () => {
@@ -300,9 +300,9 @@ describe('captcha', () => {
 
       mockedFetch.mockResolvedValue(mockResponse as any);
 
-      await expect(sendVerificationRequest('test-token')).rejects.toThrow(HttpError);
+      await expect(sendVerificationRequest('recaptcha', 'test-token')).rejects.toThrow(HttpError);
       try {
-        await sendVerificationRequest('test-token');
+        await sendVerificationRequest('recaptcha', 'test-token');
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(500);

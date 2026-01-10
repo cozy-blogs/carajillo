@@ -1,6 +1,7 @@
 import { apiRoot } from "./context";
 import { msg, str } from '@lit/localize';
 import { html, TemplateResult } from 'lit';
+//import '@hcaptcha/types';
 
 export interface Captcha {
   initialize(): Promise<void>
@@ -112,7 +113,7 @@ class Hcaptcha implements Captcha {
         this.container.id = this.containerId;
         this.container.style.display = 'none';
         document.body.appendChild(this.container);
-        this.widgetId = (window as any).hcaptcha.render(this.container, {
+        this.widgetId = hcaptcha.render(this.container, {
           sitekey: this.siteKey,
           size: 'invisible',
         });
@@ -126,14 +127,13 @@ class Hcaptcha implements Captcha {
     });
   }
 
-  getToken(action: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      if (!this.widgetId) {
-        reject(new Error(msg('hCaptcha widget not initialized')));
-        return;
-      }
-      (window as any).hcaptcha.execute(this.widgetId, { async: true, action }).then(resolve, reject);
-    });
+  async getToken(action: string): Promise<string> {
+    if (!this.widgetId) {
+      throw new Error(msg('hCaptcha widget not initialized'));
+    }
+    const response = await hcaptcha.execute(this.widgetId, { async: true, rqdata: action }) as HCaptchaResponse;
+    console.log('hCaptcha response:', response);
+    return response.response;
   }
 
   disclaimer(): TemplateResult {

@@ -19,7 +19,7 @@
     "build:openapi": "node scripts/generate-openapi-spec.js",
     "prestart": "npm run build:localize && npm run build:openapi",
     "start": "NUMBER_OF_PROXIES=0 netlify dev -c 'webpack --watch'",
-    "dev": "NODE_ENV=development && npm run start",
+    "dev": "npm run prestart && NODE_ENV=development NUMBER_OF_PROXIES=0 netlify dev -c 'webpack --mode=development --watch'",
     "dev:localize": "lit-localize extract",
     "pretest": "npm run build:localize && npm run build:openapi",
     "test": "npm run test:types && npm run test:openapi && npm run test:localize && npm run test:testsuite",
@@ -70,6 +70,7 @@
     "serverless-http": "^4.0.0"
   },
   "devDependencies": {
+    "@hcaptcha/types": "^1.1.0",
     "@lit/localize-tools": "^0.8.1",
     "@seriousme/openapi-schema-validator": "^2.7.0",
     "@types/cors": "^2.8.19",
