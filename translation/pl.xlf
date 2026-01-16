@@ -86,6 +86,18 @@
   <source>Cannot retrieve CAPTCHA configuration</source>
   <target>Nie można pobrać konfiguracji CAPTCHA</target>
 </trans-unit>
+<trans-unit id="he99a76bc75ff6e3a">
+  <source>This site is protected by reCAPTCHA and its <x id="0" equiv-text="&lt;a href=&quot;https://policies.google.com/privacy&quot; target=&quot;_blank&quot;&gt;"/>Privacy Policy<x id="1" equiv-text="&lt;/a&gt;"/> and <x id="2" equiv-text="&lt;a href=&quot;https://policies.google.com/terms&quot; target=&quot;_blank&quot;&gt;"/>Terms of Service<x id="3" equiv-text="&lt;/a&gt;"/> apply.</source>
+  <target>Ta strona jest chroniona przez reCAPTCHA. <x id="0" equiv-text="&lt;a href=&quot;https://policies.google.com/privacy&quot; target=&quot;_blank&quot;&gt;"/>Polityka prywatności<x id="1" equiv-text="&lt;/a&gt;"/> i <x id="2" equiv-text="&lt;a href=&quot;https://policies.google.com/terms&quot; target=&quot;_blank&quot;&gt;"/>Regulamin<x id="3" equiv-text="&lt;/a&gt;"/> mają zastosowanie.</target>
+</trans-unit>
+<trans-unit id="s209bbd81a5499eda">
+  <source>hCaptcha widget not initialized</source>
+  <target>Widget hCaptcha nie został zainicjalizowany</target>
+</trans-unit>
+<trans-unit id="h8def9fabfe37530f">
+  <source>This site is protected by hCaptcha and its <x id="0" equiv-text="&lt;a href=&quot;https://hcaptcha.com/privacy&quot; target=&quot;_blank&quot;&gt;"/>Privacy Policy<x id="1" equiv-text="&lt;/a&gt;"/> and <x id="2" equiv-text="&lt;a href=&quot;https://hcaptcha.com/terms&quot; target=&quot;_blank&quot;&gt;"/>Terms of Service<x id="3" equiv-text="&lt;/a&gt;"/> apply.</source>
+  <target>Ta strona jest chroniona przez hCaptcha. <x id="0" equiv-text="&lt;a href=&quot;https://hcaptcha.com/privacy&quot; target=&quot;_blank&quot;&gt;"/>Polityka prywatności<x id="1" equiv-text="&lt;/a&gt;"/> i <x id="2" equiv-text="&lt;a href=&quot;https://hcaptcha.com/terms&quot; target=&quot;_blank&quot;&gt;"/>Regulamin<x id="3" equiv-text="&lt;/a&gt;"/> mają zastosowanie.</target>
+</trans-unit>
 </body>
 </file>
 </xliff>
