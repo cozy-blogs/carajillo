@@ -30,6 +30,48 @@ export async function verifyCaptcha(action: string, token?: string, remoteIp?: s
   }
 }
 
+type ReCaptchaErrorCode
+  = 'missing-input-secret'
+  | 'invalid-input-secret'
+  | 'missing-input-response'
+  | 'invalid-input-response'
+  | 'bad-request'
+  | 'timeout-or-duplicate';
+type HCaptchaErrorCode
+  = 'missing-input-secret'
+  | 'invalid-input-secret'
+  | 'missing-input-response'
+  | 'invalid-input-response'
+  | 'expired-input-response'
+  | 'already-seen-response'
+  | 'missing-remoteip'
+  | 'invalid-remoteip'
+  | 'not-using-dummy-passcode'
+  | 'sitekey-secret-mismatch';
+
+/**
+ * Error codes returned by the CAPTCHA provider.
+ * 
+ * ReCAPTCHA or hCaptcha common error codes:
+ * missing-input-secret     - The secret parameter is missing.
+ * invalid-input-secret     - The secret parameter is invalid or malformed.
+ * missing-input-response   - The response parameter is missing.
+ * invalid-input-response   - The response parameter is invalid or malformed.
+ * bad-request              - The request is invalid or malformed.
+ * 
+ * ReCAPTCHA specific error codes:
+ * timeout-or-duplicate     - The response is no longer valid: either is too old or has been used previously.
+ * 
+ * hCaptcha specific error codes:
+ * expired-input-response   - The response parameter (verification token) is expired. (120s default)
+ * already-seen-response    - The response parameter (verification token) was already verified once.
+ * missing-remoteip         - The remoteip parameter is missing.
+ * invalid-remoteip         - The remoteip parameter is not a valid IP address or blinded value.
+ * not-using-dummy-passcode - You have used a testing sitekey but have not used its matching secret.
+ * sitekey-secret-mismatch  - The sitekey is not registered with the provided secret.
+ */
+type ErrorCode = ReCaptchaErrorCode | HCaptchaErrorCode;
+
 /**
  * CAPTCHA response from reCAPTCHA or hCaptcha.
  */
@@ -54,28 +96,7 @@ interface CaptchaResponse {
    */
   hostname: string;
 
-  /**
-   * List of error codes returned by the CAPTCHA provider.
-   * 
-   * ReCAPTCHA or hCaptcha common error codes:
-   * missing-input-secret     - The secret parameter is missing.
-   * invalid-input-secret     - The secret parameter is invalid or malformed.
-   * missing-input-response   - The response parameter is missing.
-   * invalid-input-response   - The response parameter is invalid or malformed.
-   * bad-request              - The request is invalid or malformed.
-   * 
-   * ReCAPTCHA specific error codes:
-   * timeout-or-duplicate     - The response is no longer valid: either is too old or has been used previously.
-   * 
-   * hCaptcha specific error codes:
-   * expired-input-response   - The response parameter (verification token) is expired. (120s default)
-   * already-seen-response    - The response parameter (verification token) was already verified once.
-   * missing-remoteip         - The remoteip parameter is missing.
-   * invalid-remoteip         - The remoteip parameter is not a valid IP address or blinded value.
-   * not-using-dummy-passcode - You have used a testing sitekey but have not used its matching secret.
-   * sitekey-secret-mismatch  - The sitekey is not registered with the provided secret.
-   */
-  'error-codes'?: string[];
+  'error-codes'?: ErrorCode[];
 }
 
 
@@ -138,29 +159,45 @@ export class CaptchaVerifier {
    * @param errorCodes list of CAPTCHA error codes
    * 
    */
-  private handleErrorCodes(errorCodes: string[]): never {
+  private handleErrorCodes(errorCodes: ErrorCode[]): never {
     console.error(`CAPTCHA error codes (${this.provider}): ${errorCodes.join(', ')}`);
-    if (errorCodes.includes('invalid-input-response') || errorCodes.includes('missing-input-response')) {
-      throw new HttpError({
-        statusCode: 400,
-        message: 'Bad request',
-        reason: 'bad-captcha',
-        details: `CAPTCHA error: ${errorCodes.join(', ')}`,
-      });
-    }
-    if (errorCodes.includes('timeout-or-duplicate') || errorCodes.includes('expired-input-response')) {
+
+    const errorCodeSet = new Set<ErrorCode>(errorCodes);
+
+    const tryAgainErrorCodes = new Set<ErrorCode>([
+      'timeout-or-duplicate',
+      'expired-input-response',
+      'already-seen-response',
+    ]);
+
+    const clientErrorCodes = new Set<ErrorCode>([
+      'invalid-input-response',
+      'missing-input-response',
+      'missing-remoteip',
+      'invalid-remoteip',
+    ]);
+
+    if (errorCodeSet.isSubsetOf(tryAgainErrorCodes)) {
       throw new HttpError({
         statusCode: 429,
         message: 'Try again',
         reason: 'captcha-timeout',
         details: `CAPTCHA error: ${errorCodes.join(', ')}`,
       });
+    } else if (errorCodeSet.isSubsetOf(clientErrorCodes)) {
+      throw new HttpError({
+        statusCode: 400,
+        message: 'Bad request',
+        reason: 'bad-captcha',
+        details: `CAPTCHA error: ${errorCodes.join(', ')}`,
+      });
+    } else {
+      throw new HttpError({
+        statusCode: 500,
+        message: 'Internal server error',
+        details: `CAPTCHA error: ${errorCodes.join(', ')}`,
+      });
     }
-    throw new HttpError({
-      statusCode: 500,
-      message: 'Internal server error',
-      details: `CAPTCHA error: ${errorCodes.join(', ')}`,
-    });
   }
   
   /**
