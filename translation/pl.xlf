@@ -50,10 +50,6 @@
   <source>Missing authorization token</source>
   <target>Brakujący token uwierzytelniania</target>
 </trans-unit>
-<trans-unit id="sa92333d7aaa088a8">
-  <source>reCAPTCHA site key not loaded</source>
-  <target>Klucz witryny reCAPTCHA nie został załadowany</target>
-</trans-unit>
 <trans-unit id="s3a6bb4620999bfb8">
   <source>Failed to fetch company information</source>
   <target>Nie udało się pobrać informacji o firmie</target>

@@ -34,6 +34,9 @@ CAPTCHA_PROVIDER=recaptcha # default: 'recaptcha'
 # CAPTCHA score threshold
 CAPTCHA_THRESHOLD=0.5 # default: 0.5
 
+# CAPTCHA branding (none|badge|disclaimer)
+CAPTCHA_BRANDING=disclaimer # default: 'disclaimer'
+
 # reCAPTCHA site key, secret key
 # https://console.cloud.google.com/security/recaptcha/
 RECAPTCHA_SITE_KEY=your-site-key # required for recaptcha

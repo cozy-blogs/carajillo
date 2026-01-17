@@ -51,6 +51,7 @@ type HCaptchaErrorCode
   | 'invalid-input-secret'
   | 'missing-input-response'
   | 'invalid-input-response'
+  | 'bad-request'
   | 'expired-input-response'
   | 'already-seen-response'
   | 'missing-remoteip'
