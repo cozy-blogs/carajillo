@@ -136,10 +136,10 @@ function loadCaptchaEnv(env: NodeJS.ProcessEnv = process.env): CaptchaConfigurat
   const provider = parseProvider(env.CAPTCHA_PROVIDER);
   return {
     provider,
-    siteKey: pickSiteKey(provider, env),
-    secret: pickSecret(provider, env),
-    threshold: parseThreshold(env.CAPTCHA_THRESHOLD),
-    branding: parseBranding(env.CAPTCHA_BRANDING),
+    siteKey: pickCaptchaSiteKey(provider, env),
+    secret: pickCaptchaSecret(provider, env),
+    threshold: parseCaptchaThreshold(env.CAPTCHA_THRESHOLD),
+    branding: parseCaptchaBranding(env.CAPTCHA_BRANDING),
   };
 }
 
@@ -156,7 +156,7 @@ function parseProvider(provider?: string): CaptchaProvider {
   }
 }
 
-function pickSiteKey(provider: CaptchaProvider, env: NodeJS.ProcessEnv): string {
+function pickCaptchaSiteKey(provider: CaptchaProvider, env: NodeJS.ProcessEnv): string {
   switch (provider) {
     case 'hcaptcha':
       if (!env.HCAPTCHA_SITE_KEY) {
@@ -173,7 +173,7 @@ function pickSiteKey(provider: CaptchaProvider, env: NodeJS.ProcessEnv): string 
   }
 }
 
-function pickSecret(provider: CaptchaProvider, env: NodeJS.ProcessEnv): string {
+function pickCaptchaSecret(provider: CaptchaProvider, env: NodeJS.ProcessEnv): string {
   switch (provider) {
     case 'hcaptcha':
       if (!env.HCAPTCHA_SECRET) {
@@ -190,7 +190,7 @@ function pickSecret(provider: CaptchaProvider, env: NodeJS.ProcessEnv): string {
   }
 }
 
-function parseBranding(value?: string): CaptchaBranding {
+function parseCaptchaBranding(value?: string): CaptchaBranding {
   if (value === undefined) {
     return DEFAULT_CONFIGURATION.captcha.branding;
   }
@@ -204,7 +204,7 @@ function parseBranding(value?: string): CaptchaBranding {
   }
 }
 
-function parseThreshold(value?: string): number {
+function parseCaptchaThreshold(value?: string): number {
   if (value === undefined) {
     return DEFAULT_CONFIGURATION.captcha.threshold;
   }
@@ -273,19 +273,19 @@ function loadLoopsSoEnv(env: NodeJS.ProcessEnv = process.env): LoopsSoConfigurat
 }
 
 export function generateEnvFile(config: Configuration): string {
-  let captchaConfig : string;
+  let captchaProviderSpecific : string;
   switch (config.captcha.provider) {
     case 'none':
-      captchaConfig = '';
+      captchaProviderSpecific = '';
       break;
     case 'recaptcha':
-      captchaConfig = `# reCAPTCHA site key, secret key
+      captchaProviderSpecific = `# reCAPTCHA site key, secret key
 # https://console.cloud.google.com/security/recaptcha/
 RECAPTCHA_SITE_KEY=${config.captcha.siteKey}
 RECAPTCHA_SECRET=${config.captcha.secret}`;
       break;
     case 'hcaptcha':
-      captchaConfig = `# hCaptcha site key
+      captchaProviderSpecific = `# hCaptcha site key
 # https://dashboard.hcaptcha.com/sites
 HCAPTCHA_SITE_KEY=${config.captcha.siteKey}
 # hCaptcha secret key
@@ -322,7 +322,9 @@ CAPTCHA_PROVIDER=${config.captcha.provider}
 # default: 0.5
 CAPTCHA_THRESHOLD=${config.captcha.threshold.toFixed(1)}
 
-${captchaConfig}
+CAPTCHA_BRANDING=${config.captcha.branding}
+
+${captchaProviderSpecific}
 
 # Loops.so API key
 # https://app.loops.so/settings?page=api
