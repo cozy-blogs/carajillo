@@ -11,7 +11,7 @@ COMPANY_ADDRESS=Company Address # optional
 COMPANY_LOGO=https://example.com/logo.png # optional
 
 # Domains where submission forms may be created
-CORS_ORIGIN=example.com other.example.com # default: all submissions are accepted
+CORS_ORIGIN=https://example.com https://other.example.com # default: all submissions are accepted
 
 # Number of proxies to trust
 # @see https://github.com/express-rate-limit/express-rate-limit/wiki/Troubleshooting-Proxy-Issues

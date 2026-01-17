@@ -47,7 +47,6 @@ function initSubscriptionForm(form: HTMLFormElement) {
 
   if (captcha !== null && captcha.branding === 'disclaimer') {
     const disclaimer = captcha.disclaimer();
-    console.debug('adding disclaimer', disclaimer);
     const disclaimerElement = document.createElement("div");
     disclaimerElement.className = "captcha-branding";
     render(disclaimer, disclaimerElement);

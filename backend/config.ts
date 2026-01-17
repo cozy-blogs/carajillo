@@ -48,8 +48,8 @@ export interface ServerConfiguration {
   numberOfProxies: number;
 
   /** @brief Domains where submission forms may be created.
-   * @details This is the list of domains that are allowed to create submission forms.
-   * (env:CORS_ORIGIN space separated list)
+   * @details This is the list of origins (domains, protocols, ports) that are allowed to create submission forms.
+   * (env:CORS_ORIGIN space separated list) default: ['*'] (all origins are allowed)
    * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
    */
   corsOrigin: string[];
