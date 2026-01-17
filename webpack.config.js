@@ -24,12 +24,14 @@ function generateCaptchaConfig() {
         success: true,
         provider: 'recaptcha',
         site_key: process.env.RECAPTCHA_SITE_KEY,
+        branding: process.env.CAPTCHA_BRANDING || 'disclaimer',
       };
     case 'hcaptcha':
       return {
         success: true,
         provider: 'hcaptcha',
         site_key: process.env.HCAPTCHA_SITE_KEY,
+        branding: process.env.CAPTCHA_BRANDING || 'disclaimer',
       };
     default:
       throw new Error(`Unsupported CAPTCHA provider: ${process.env.CAPTCHA_PROVIDER}`);

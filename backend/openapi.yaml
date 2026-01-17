@@ -200,7 +200,10 @@ components:
           type: string
           description: CAPTCHA site key for client-side integration
           example: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-
+        branding:
+          type: string
+          enum: [none, badge, disclaimer]
+          default: disclaimer
     Company:
       type: object
       required:

@@ -21,7 +21,7 @@ describe('captcha', () => {
         company: { name: 'Test Company', address: '123 Test St', logo: 'https://example.com/logo.png' },
         server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600 },
         loopsSo: { apiKey: 'test-loops-api-key' },
-        captcha: { provider: 'hcaptcha', siteKey: 'hcaptcha-site-key', secret: 'hcaptcha-secret', threshold: 0.5 },
+        captcha: { provider: 'hcaptcha', siteKey: 'hcaptcha-site-key', secret: 'hcaptcha-secret', threshold: 0.5, branding: 'disclaimer' },
       });
 
       const configResponse = configuration();
@@ -29,6 +29,7 @@ describe('captcha', () => {
         success: true,
         provider: 'hcaptcha',
         site_key: 'hcaptcha-site-key',
+        branding: 'disclaimer',
       });
     });
   });
@@ -39,6 +40,7 @@ describe('captcha', () => {
       siteKey: 'test-site-key',
       secret: 'test-recaptcha-secret',
       threshold: 0.5,
+      branding: 'badge',
     };
 
     const hcaptchaConfiguration: config.CaptchaConfiguration = {
@@ -46,6 +48,7 @@ describe('captcha', () => {
       siteKey: 'test-hcaptcha-site-key',
       secret: 'test-hcaptcha-secret',
       threshold: 0.5,
+      branding: 'disclaimer',
     };
 
     it('should return true when score is above threshold', async () => {

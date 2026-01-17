@@ -1,18 +1,27 @@
 import fetch from 'node-fetch';
 import { HttpError } from './error';
-import { CaptchaConfiguration, CaptchaProvider, loadConfiguration } from './config';
+import { CaptchaConfiguration, CaptchaProvider, CaptchaBranding, loadConfiguration } from './config';
 
-export interface CaptchaConfigurationResponse {
+export interface CaptchaConfigurationSuccess {
   success: true;
   /** Active CAPTCHA provider. */
   provider: CaptchaProvider;
   /** Site key used by the frontend widget. */
   site_key: string;
+  /** Branding used by the frontend widget. */
+  branding: CaptchaBranding;
 }
 
-export function configuration(): CaptchaConfigurationResponse {
+export interface CaptchaConfigurationError {
+  success: false;
+  error: string;
+}
+
+export type CaptchaConfigurationResponse = CaptchaConfigurationSuccess | CaptchaConfigurationError;
+
+export function configuration(): CaptchaConfigurationSuccess {
   const config = loadConfiguration().captcha;
-  return { success: true, provider: config.provider, site_key: config.siteKey };
+  return { success: true, provider: config.provider, site_key: config.siteKey, branding: config.branding };
 }
 
 

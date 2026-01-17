@@ -2,6 +2,7 @@ import { apiRoot } from "./context";
 import { initializeLocale } from "./localize";
 import { msg, str } from '@lit/localize';
 import { Captcha, createCaptcha } from "./captcha";
+import { render } from "lit-html";
 
 type SubscriptionStatus = 'expecting' | 'in-progress' | 'try-again' | 'awaiting-confirmation' | 'success' | 'failed';
 
@@ -43,6 +44,15 @@ function initSubscriptionForm(form: HTMLFormElement) {
     return;
   }
   form.dataset.status = 'expecting';
+
+  if (captcha !== null && captcha.branding === 'disclaimer') {
+    const disclaimer = captcha.disclaimer();
+    console.debug('adding disclaimer', disclaimer);
+    const disclaimerElement = document.createElement("div");
+    disclaimerElement.className = "captcha-branding";
+    render(disclaimer, disclaimerElement);
+    form.appendChild(disclaimerElement);
+  }
 
   form.addEventListener("submit", async function(event) {
     event.preventDefault();
