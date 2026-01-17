@@ -23,6 +23,7 @@ const DEFAULT_CONFIGURATION = {
   captcha: {
     provider: 'none' as CaptchaProvider,
     threshold: 0.5,
+    branding: 'disclaimer' as CaptchaBranding,
   },
 };
 
@@ -71,6 +72,9 @@ export interface ServerConfiguration {
  */
 export type CaptchaProvider = 'recaptcha' | 'hcaptcha' | 'none';
 
+/** @brief CAPTCHA branding options for frontend widget. */
+export type CaptchaBranding = 'none' | 'badge' | 'disclaimer';
+
 /**
  * @brief Environment-derived settings for CAPTCHA handling.
  * @details Centralizes provider selection, site key, secret, and threshold resolution from environment variables so other modules do not access process.env directly.
@@ -87,6 +91,9 @@ export interface CaptchaConfiguration {
    * (env:CAPTCHA_THRESHOLD) default: 0.5
    */
   threshold: number;
+
+  /** @brief CAPTCHA branding. (env:CAPTCHA_BRANDING) */
+  branding: CaptchaBranding;
 }
 
 export interface LoopsSoConfiguration {
@@ -132,6 +139,7 @@ function loadCaptchaEnv(env: NodeJS.ProcessEnv = process.env): CaptchaConfigurat
     siteKey: pickSiteKey(provider, env),
     secret: pickSecret(provider, env),
     threshold: parseThreshold(env.CAPTCHA_THRESHOLD),
+    branding: parseBranding(env.CAPTCHA_BRANDING),
   };
 }
 
@@ -179,6 +187,20 @@ function pickSecret(provider: CaptchaProvider, env: NodeJS.ProcessEnv): string {
       return env.RECAPTCHA_SECRET;
     case 'none':
       return '';
+  }
+}
+
+function parseBranding(value?: string): CaptchaBranding {
+  if (value === undefined) {
+    return DEFAULT_CONFIGURATION.captcha.branding;
+  }
+  switch (value) {
+    case 'none':
+    case 'badge':
+    case 'disclaimer':
+      return value;
+    default:
+      throw new Error(`Unsupported CAPTCHA branding: ${value}`);
   }
 }
 
