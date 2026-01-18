@@ -73,7 +73,7 @@ export interface ServerConfiguration {
 export type CaptchaProvider = 'recaptcha' | 'hcaptcha' | 'none';
 
 /** @brief CAPTCHA branding options for frontend widget. */
-export type CaptchaBranding = 'none' | 'badge' | 'disclaimer';
+export type CaptchaBranding = 'none' | 'badge' | 'inline-badge' | 'disclaimer';
 
 /**
  * @brief Environment-derived settings for CAPTCHA handling.
@@ -197,6 +197,7 @@ function parseCaptchaBranding(value?: string): CaptchaBranding {
   switch (value) {
     case 'none':
     case 'badge':
+    case 'inline-badge':
     case 'disclaimer':
       return value;
     default:

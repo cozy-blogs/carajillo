@@ -11,7 +11,6 @@ paths:
   /company:
     get:
       summary: Get company information
-      description: Retrieves the company information
       operationId: getCompany
       tags:
         - Company
@@ -28,7 +27,6 @@ paths:
   /captcha:
     get:
       summary: Get CAPTCHA configuration
-      description: Retrieve CAPTCHA configuration including site key and provider
       operationId: getCaptcha
       tags:
         - CAPTCHA
@@ -63,8 +61,7 @@ paths:
 
   /subscription:
     get:
-      summary: Get subscription status
-      description: Retrieves the subscription status for the authenticated user
+      summary: Get user's subscription status
       operationId: getSubscription
       tags:
         - Subscription
@@ -111,8 +108,8 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
     put:
-      summary: Update subscription
-      description: Updates subscription status for the authenticated user
+      summary: Update user's subscription
+      description: Confirms subscription, subscribes to mailing lists or unsubscribes from mailing lists.
       operationId: updateSubscription
       tags:
         - Subscription
@@ -149,7 +146,7 @@ paths:
           type: string
     get:
       summary: Test endpoint
-      description: Returns test information about the request
+      description: Returns test information about the request. Used for debugging and testing.
       operationId: testEndpoint
       tags:
         - Test
@@ -188,22 +185,29 @@ components:
         - success
         - provider
         - site_key
+        - branding
       properties:
         success:
           type: boolean
           example: true
         provider:
           type: string
-          enum: [recaptcha, hcaptcha, none]
-          example: recaptcha
+          enum:
+          - none
+          - recaptcha
+          - hcaptcha
         site_key:
           type: string
           description: CAPTCHA site key for client-side integration
           example: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
         branding:
           type: string
-          enum: [none, badge, disclaimer]
-          default: disclaimer
+          enum:
+          - none
+          - badge
+          - inline-badge
+          - disclaimer
+          description: How CAPTCHA provider's logo, privacy policy and terms of service should be displayed in the frontend widget.
     Company:
       type: object
       required:
@@ -216,7 +220,7 @@ components:
           example: "Company Name"
         address:
           type: string
-          description: Address of the company
+          description: Postal address of the company
           example: "123 Main St, Anytown, USA"
         logo:
           type: string
@@ -275,9 +279,10 @@ components:
         language:
           type: string
           description: Language code for email templates (ISO 639-1)
-          example: "en"
           minLength: 2
           maxLength: 2
+          pattern: ^[a-z]{2}$
+          example: "en"
         referer:
           type: string
           format: uri

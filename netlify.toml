@@ -21,7 +21,7 @@
     Access-Control-Allow-Origin = "*"
 
 [[headers]]
-  for = "/api/*"
+  for = "/.netlify/functions/api/*"
   [headers.values]
     Cache-Control = "no-store"
     X-Content-Type-Options = "nosniff"

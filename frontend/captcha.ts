@@ -1,6 +1,6 @@
 import { apiRoot } from "./context";
 import { msg, str } from '@lit/localize';
-import { html, TemplateResult } from 'lit';
+import { html, render, TemplateResult, RenderOptions } from 'lit';
 import type { CaptchaConfigurationResponse } from '../backend/captcha';
 import type { CaptchaProvider, CaptchaBranding } from '../backend/config';
 //import '@hcaptcha/types';
@@ -9,6 +9,7 @@ export interface Captcha {
   initialize(): Promise<void>
   getToken(action: string): Promise<string>;
   branding: CaptchaBranding;
+  render(container: HTMLElement, options?: RenderOptions): void;
   disclaimer(): TemplateResult;
 };
 
@@ -72,15 +73,18 @@ class NoCaptcha implements Captcha {
   disclaimer(): TemplateResult {
     return html``;
   }
+  render(container: HTMLElement, options?: RenderOptions) {
+  }
 }
 
 class Recaptcha implements Captcha {
   constructor(configuration: CaptchaConfiguration) {
-    this.configuration = configuration;
+    this.siteKey = configuration.siteKey;
+    this.branding = configuration.branding;
   }
 
   initialize(): Promise<void> {
-    if (this.configuration.branding !== 'badge') {
+    if (!this.isBadgeVisible) {
       // https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed
       const style = document.createElement('style');
       style.textContent = `.grecaptcha-badge { visibility: hidden; } `;
@@ -90,7 +94,7 @@ class Recaptcha implements Captcha {
       const script = document.createElement("script");
       script.addEventListener('load', () => { resolve(); });
       script.addEventListener('error', (error) => { reject(error); });
-      script.src = `https://www.google.com/recaptcha/api.js?render=${this.configuration.siteKey}`;
+      script.src = `https://www.google.com/recaptcha/api.js?render=${this.siteKey}`;
       script.defer = true;
       script.async = true;
       document.head.appendChild(script);
@@ -100,25 +104,49 @@ class Recaptcha implements Captcha {
   getToken(action: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       grecaptcha.ready(() => {
-        grecaptcha.execute(this.configuration.siteKey, {action}).then(resolve, reject);
+        grecaptcha.execute(this.siteKey, {action}).then(resolve, reject);
       });
     });
   }
 
-  get branding(): CaptchaBranding {
-    return this.configuration.branding;
+  render(container: HTMLElement, options?: RenderOptions) {
+    switch (this.branding) {
+      case 'none':
+        break;
+      case 'badge':
+      case 'inline-badge':
+        // rendered by recaptcha itself
+        break;
+      case 'disclaimer':
+        render(this.disclaimer(), container, options);
+        break;
+    }
   }
 
   disclaimer(): TemplateResult {
     return msg(html`This site is protected by reCAPTCHA and its <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a> and <a href="https://policies.google.com/terms" target="_blank">Terms of Service</a> apply.`);
   }
 
-  private configuration: CaptchaConfiguration;
+  get isBadgeVisible(): boolean {
+    switch (this.branding) {
+      case 'none':
+      case 'disclaimer':
+        return false;
+      case 'badge':
+      case 'inline-badge':
+      default:
+        return true;
+    }
+  }
+
+  private readonly siteKey: string;
+  public readonly branding: CaptchaBranding;
 }
 
 class Hcaptcha implements Captcha {
   constructor(configuration: CaptchaConfiguration) {
-    this.configuration = configuration;
+    this.siteKey = configuration.siteKey;
+    this.branding = configuration.branding;
     this.containerId = `hcaptcha-container-${Math.random().toString(36).substring(2)}`;
   }
 
@@ -126,14 +154,6 @@ class Hcaptcha implements Captcha {
     return new Promise<void>((resolve, reject) => {
       const script = document.createElement("script");
       script.addEventListener('load', () => {
-        this.container = document.createElement('div');
-        this.container.id = this.containerId;
-        this.container.style.display = 'none';
-        document.body.appendChild(this.container);
-        this.widgetId = hcaptcha.render(this.container, {
-          sitekey: this.configuration.siteKey,
-          size: 'invisible',
-        });
         resolve();
       });
       script.addEventListener('error', (error) => { reject(error); });
@@ -153,15 +173,29 @@ class Hcaptcha implements Captcha {
     return response.response;
   }
 
-  get branding(): CaptchaBranding {
-    return this.configuration.branding;
+  render(container: HTMLElement, options?: RenderOptions) {
+    switch (this.branding) {
+      case 'none':
+        break;
+      case 'badge':
+      case 'inline-badge':
+        this.widgetId = hcaptcha.render(container, {
+          sitekey: this.siteKey,
+          size: 'invisible',
+        });
+        break;
+      case 'disclaimer':
+        render(this.disclaimer(), container, options);
+        break;
+    }
   }
 
   disclaimer(): TemplateResult {
     return msg(html`This site is protected by hCaptcha and its <a href="https://hcaptcha.com/privacy" target="_blank">Privacy Policy</a> and <a href="https://hcaptcha.com/terms" target="_blank">Terms of Service</a> apply.`);
   }
 
-  private readonly configuration: CaptchaConfiguration;
+  private readonly siteKey: string;
+  public readonly branding: CaptchaBranding;
   private readonly containerId: string;
   private container: HTMLElement | null = null;
   private widgetId: string | null = null;
