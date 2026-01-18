@@ -45,12 +45,11 @@ function initSubscriptionForm(form: HTMLFormElement) {
   }
   form.dataset.status = 'expecting';
 
-  if (captcha !== null && captcha.branding === 'disclaimer') {
-    const disclaimer = captcha.disclaimer();
-    const disclaimerElement = document.createElement("div");
-    disclaimerElement.className = "captcha-branding";
-    render(disclaimer, disclaimerElement);
-    form.appendChild(disclaimerElement);
+  if (captcha !== null) {
+    const captchaElement = document.createElement("div");
+    captchaElement.className = "carajillo-captcha";
+    form.appendChild(captchaElement);
+    captcha.render(captchaElement);
   }
 
   form.addEventListener("submit", async function(event) {
