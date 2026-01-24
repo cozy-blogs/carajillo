@@ -31,7 +31,7 @@ export async function verifyCaptcha(action: string, token?: string, remoteIp?: s
     case 'recaptcha':
     case 'hcaptcha':
       const verifier = new CaptchaVerifier(config);
-      verifier.verify.bind(verifier);
+      return await verifier.verify(action, token, remoteIp);
     case 'none':
       return true;
     default:
