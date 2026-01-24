@@ -172,6 +172,7 @@ if (process.env.NODE_ENV === "development") {
       query: req.query,
       params: req.params,
       headers: req.headers,
+      ENV_URL: process.env.URL,
     });
   });
 
