@@ -18,7 +18,7 @@ const DEFAULT_CONFIGURATION = {
   server: {
     numberOfProxies: 1,
     jwtExpiration: ms.default('1 year'),
-    corsOrigin: ['*'],
+    corsOrigin: [] as string[],
   },
   captcha: {
     provider: 'none' as CaptchaProvider,
