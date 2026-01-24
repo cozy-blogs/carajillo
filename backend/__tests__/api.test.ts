@@ -20,13 +20,13 @@ describe('API routes', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
     process.env = { ...originalEnv };
     process.env.NODE_ENV = 'test';
     process.env.COMPANY_NAME = 'Test Company';
     process.env.COMPANY_ADDRESS = '123 Test St';
     process.env.COMPANY_LOGO = 'https://example.com/logo.png';
     process.env.CORS_ORIGIN = 'http://localhost:3000';
+    jest.resetModules();
 
     jest.clearAllMocks();
   });
@@ -238,7 +238,8 @@ describe('API routes', () => {
 
       // CORS middleware should be applied - check for CORS headers
       // Note: CORS headers may vary, but origin should be set
-      expect(response.headers['access-control-allow-origin'] || response.headers['vary']).toBeDefined();
+      expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+      expect(response.headers['vary']).toBe('Origin');
     });
   });
 });

@@ -53,10 +53,42 @@ app.use((req, res, next) => {
 // Parse strings as simple key-value pairs.
 app.set('query parser', 'simple');
 
+function parseCorsOrigin(value?: string): string[] | boolean {
+  const defaultValue = false;
+
+  if (value === undefined) {
+    return defaultValue;
+  }
+  const origins = value.trim().split(/\s+/).filter(origin => origin);
+  if (origins.length === 0) {
+    return defaultValue;
+  } else if (origins.includes('*')) {
+    // Cors middleware won't process ['*'] correctly. It has to be '*' or true.
+    // '*' would mean to set Access-Control-Allow-Origin response header literally to '*'.
+    // true would mean to set Access-Control-Allow-Origin to the request origin.
+    // First option (Access-Control-Allow-Origin: *) in conjunction with Access-Control-Allow-Credentials: true
+    // is blocked by browsers for security reasons (so called wildcard exception).
+    // Second option (reflecting the request origin) is removing the safety guard.
+    // It should be fine though since credentials are not sent through cookies and responses are not cached (Cache-Control: no-store)
+    // and not shared across domains (Vary: Origin).
+    // Still, it is better to be explicit and allow only the domains that are allowed to create submission forms.
+    // Read more:
+    // * https://github.com/expressjs/cors/issues/333
+    // * https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS#credentialed_requests_and_wildcards
+    // * https://jub0bs.com/posts/2023-02-08-fearless-cors/
+    console.warn('CORS_ORIGIN is set to "*". This is not recommended. Use CORS_ORIGIN to allow only the domains that are allowed to create submission forms.');
+
+    return true;
+  }
+  return origins;
+}
+
 // Configure CORS to allow cross-origin requests
-// Allow all origins by default, or restrict via CORS_ORIGIN environment variable
+// By default cross site requests are blocked.
+// Set CORS_ORIGIN to space separated list of 
+// '*' to allow all origins, or to a list of allowed origins.
 const corsMiddleware = cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.trim().split(/\s+/) : true,
+  origin: parseCorsOrigin(process.env.CORS_ORIGIN),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

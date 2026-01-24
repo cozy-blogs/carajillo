@@ -1,6 +1,7 @@
 // Test setup file
 // Mock environment variables before tests run
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-jwt-signing';
+process.env.CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
 process.env.RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET || 'test-recaptcha-secret';
 process.env.RECAPTCHA_SITE_KEY = process.env.RECAPTCHA_SITE_KEY || 'test-site-key';
 process.env.HCAPTCHA_SECRET = process.env.HCAPTCHA_SECRET || 'test-hcaptcha-secret';
