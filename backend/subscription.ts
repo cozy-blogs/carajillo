@@ -22,7 +22,7 @@ export type SubscribeRequest = {
 export async function subscribe(req: Request) {
   const request = req.body as SubscribeRequest;
   const remoteIp = req.ip;
-  const rootUrl = new URL(`${req.protocol}://${req.hostname}`);
+  const rootUrl = getRootUrl(req);
   if (request.language === undefined) {
     request.language = req.acceptsLanguages().shift();
   }
@@ -138,4 +138,13 @@ export async function updateSubscription({email, subscribe, mailingLists}: Updat
     await unsubscribeContact(email);
   }
   return {success: true, email, subscribed: subscribe};
+}
+
+function getRootUrl(req: Request): URL {
+  if (process.env.NODE_ENV === "development" && process.env.URL !== undefined) {
+    // netlify dev sets request to https://localhost
+    // even though the server is running on http://localhost:8888
+    return new URL(process.env.URL);
+  }
+  return new URL(`${req.protocol}://${req.hostname}`);
 }
