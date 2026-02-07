@@ -59,6 +59,7 @@ function parseCorsOrigin(value?: string): string[] | boolean {
   if (value === undefined) {
     return defaultValue;
   }
+  // @todo verify correct format, strip /
   const origins = value.trim().split(/\s+/).filter(origin => origin);
   if (origins.length === 0) {
     return defaultValue;
