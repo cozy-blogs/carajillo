@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 import { HttpError } from './error';
-import { CaptchaConfiguration, CaptchaProvider, CaptchaBranding, loadConfiguration } from './config';
+import { CaptchaConfiguration, CaptchaProvider, CaptchaBranding } from './config';
 
-export interface CaptchaConfigurationSuccess {
+export interface CaptchaConfigurationSuccessResponse {
   success: true;
   /** Active CAPTCHA provider. */
   provider: CaptchaProvider;
@@ -12,21 +12,19 @@ export interface CaptchaConfigurationSuccess {
   branding: CaptchaBranding;
 }
 
-export interface CaptchaConfigurationError {
+export interface CaptchaConfigurationErrorResponse {
   success: false;
   error: string;
 }
 
-export type CaptchaConfigurationResponse = CaptchaConfigurationSuccess | CaptchaConfigurationError;
+export type CaptchaConfigurationResponse = CaptchaConfigurationSuccessResponse | CaptchaConfigurationErrorResponse;
 
-export function configuration(): CaptchaConfigurationSuccess {
-  const config = loadConfiguration().captcha;
+export function configurationEndpoint(config: CaptchaConfiguration): CaptchaConfigurationResponse {
   return { success: true, provider: config.provider, site_key: config.siteKey, branding: config.branding };
 }
 
 
-export async function verifyCaptcha(action: string, token?: string, remoteIp?: string): Promise<boolean> {
-  const config = loadConfiguration().captcha;
+export async function verifyCaptcha(config: CaptchaConfiguration, action: string, token?: string, remoteIp?: string): Promise<boolean> {
   switch (config.provider) {
     case 'recaptcha':
     case 'hcaptcha':

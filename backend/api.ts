@@ -13,7 +13,7 @@ import rateLimit from "express-rate-limit";
 import { subscribe, getSubscription, updateSubscription } from "./subscription"
 import type { UpdateSubscriptionRequest } from "./subscription";
 import { Loops } from "./loops";
-import { configuration as captchaConfiguration } from "./captcha";
+import { configurationEndpoint as captchaConfiguration } from "./captcha";
 import { loadConfiguration } from "./config";
 
 // utilities
@@ -133,12 +133,12 @@ router.get("/company", async (req, res) => {
 });
 
 router.post("/subscription", subscribeRateLimiter, async (req, res) => {
-  const response = await subscribe(req);
+  const response = await subscribe(config, req);
   res.json(response);
 });
 router.get("/subscription", authenticateRateLimiter, async (req, res) => {
   const email = authenticate(req);
-  const response = await getSubscription(email);
+  const response = await getSubscription(config, email);
   res.json(response);
 });
 router.put("/subscription", authenticateRateLimiter, async (req, res) => {
@@ -151,7 +151,7 @@ router.put("/subscription", authenticateRateLimiter, async (req, res) => {
       details: "Email address from request does not match JWT."
     });
   }
-  const response = await updateSubscription(request);
+  const response = await updateSubscription(config, request);
   res.json(response);
 });
 
@@ -159,7 +159,7 @@ router.put("/subscription", authenticateRateLimiter, async (req, res) => {
 // Those are prebuilt on Netlify and should not be serverd by function.
 // This is just a backup in case the app is served outside of Netlify.
 router.get("/captcha", async (req, res) => {
-  res.json(captchaConfiguration());
+  res.json(captchaConfiguration(config.captcha));
 });
 
 router.get("/lists", async (req, res) => {
