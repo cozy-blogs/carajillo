@@ -1,4 +1,4 @@
-import { CaptchaVerifier, configuration } from '../captcha';
+import { CaptchaVerifier, configurationEndpoint } from '../captcha';
 import { HttpError } from '../error';
 import * as config from '../config';
 import fetch from 'node-fetch';
@@ -17,14 +17,7 @@ describe('captcha', () => {
   
   describe('configuration', () => {
     it('should return correct configuration', () => {
-      jest.mocked(config.loadConfiguration).mockReturnValue({
-        company: { name: 'Test Company', address: '123 Test St', logo: 'https://example.com/logo.png' },
-        server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600 },
-        loopsSo: { apiKey: 'test-loops-api-key' },
-        captcha: { provider: 'hcaptcha', siteKey: 'hcaptcha-site-key', secret: 'hcaptcha-secret', threshold: 0.5, branding: 'disclaimer' },
-      });
-
-      const configResponse = configuration();
+      const configResponse = configurationEndpoint({provider: 'hcaptcha', siteKey: 'hcaptcha-site-key', secret: 'hcaptcha-secret', threshold: 0.5, branding: 'disclaimer'});
       expect(configResponse).toEqual({
         success: true,
         provider: 'hcaptcha',

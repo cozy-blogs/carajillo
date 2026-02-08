@@ -3,7 +3,7 @@ import { HttpError } from './error';
 import { verifyCaptcha } from './captcha';
 import { Loops } from './loops';
 import { createToken } from './jwt';
-import { loadConfiguration } from './config';
+import type { Configuration } from './config';
 
 export type SubscribeRequest = {
   email : string;
@@ -20,7 +20,7 @@ export type SubscribeRequest = {
  * It sends confirmation email (if it does not exist already)
  * and protects the entry with CAPTCHA mechanism.
  */
-export async function subscribe(req: Request) {
+export async function subscribe(config: Configuration, req: Request) {
   const request = req.body as SubscribeRequest;
   const remoteIp = req.ip;
   const rootUrl = getRootUrl(req);
@@ -32,10 +32,9 @@ export async function subscribe(req: Request) {
 
   const {email, mailingLists, captchaToken, ...properties} = request;
 
-  const config = loadConfiguration();
   const loops = new Loops(config);
 
-  const valid = await verifyCaptcha('subscribe', captchaToken, remoteIp);
+  const valid = await verifyCaptcha(config.captcha, 'subscribe', captchaToken, remoteIp);
   if (!valid) {
     throw new HttpError({
       statusCode: 429,
@@ -99,8 +98,7 @@ export interface SubscriptionStatus {
   referer?: string;
 }
 
-export async function getSubscription(email: string): Promise<SubscriptionStatus> {
-  const config = loadConfiguration();
+export async function getSubscription(config: Configuration, email: string): Promise<SubscriptionStatus> {
   const loops = new Loops(config);
   const contact = await loops.findContact(email);
   if (contact === null) {
@@ -137,8 +135,7 @@ export interface UpdateSubscriptionRequest {
   mailingLists?: Record<string, boolean>;
 }
 
-export async function updateSubscription({email, subscribe, mailingLists}: UpdateSubscriptionRequest) {
-  const config = loadConfiguration();
+export async function updateSubscription(config: Configuration, {email, subscribe, mailingLists}: UpdateSubscriptionRequest) {
   const loops = new Loops(config);
   if (subscribe) {
     await loops.subscribeContact(email, mailingLists);

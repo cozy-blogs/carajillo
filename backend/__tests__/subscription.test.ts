@@ -8,8 +8,22 @@ import { HttpError } from '../error';
 import * as captcha from '../captcha';
 import { Loops } from '../loops';
 import * as jwt from '../jwt';
+import type { Configuration } from '../config';
 
 jest.mock('../captcha');
+jest.mock('../config');
+const mockConfig: Configuration = {
+  company: { name: 'Test Company', address: '123 Test St', logo: 'https://example.com/logo.png' },
+  server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600 },
+  loopsSo: { apiKey: 'test-loops-api-key' },
+  captcha: {
+    provider: 'recaptcha',
+    siteKey: 'test-site-key',
+    secret: 'test-recaptcha-secret',
+    threshold: 0.5,
+    branding: 'disclaimer',
+  },
+};
 const LoopsMock = {
   upsertContact: jest.fn(),
   sendConfirmationMail: jest.fn(),
@@ -61,14 +75,14 @@ describe('subscription', () => {
       (jwt.createToken as jest.Mock).mockReturnValue('jwt-token');
 
       const mockReq = createMockRequest();
-      const result = await subscribe(mockReq);
+      const result = await subscribe(mockConfig, mockReq);
 
       expect(result).toEqual({
         success: true,
         doubleOptIn: true,
         email: 'test@example.com',
       });
-      expect(captcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token', '192.168.1.1');
+      expect(captcha.verifyCaptcha).toHaveBeenCalledWith(mockConfig.captcha, 'subscribe', 'captcha-token', '192.168.1.1');
       expect(LoopsMock.upsertContact).toHaveBeenCalled();
       expect(LoopsMock.sendConfirmationMail).toHaveBeenCalledWith('test@example.com', new URL('https://example.com/control-panel?token=jwt-token&lang=en'), 'en');
     });
@@ -78,10 +92,10 @@ describe('subscription', () => {
       (captcha.verifyCaptcha as jest.Mock).mockResolvedValueOnce(false);
 
       const mockReq = createMockRequest();
-      await expect(subscribe(mockReq)).rejects.toThrow();
+      await expect(subscribe(mockConfig, mockReq)).rejects.toThrow();
 
       try {
-        await subscribe(mockReq);
+        await subscribe(mockConfig, mockReq);
       } catch (error: any) {
         expect(error.message).toBe('Try again later');
         expect(error.statusCode).toBe(429);
@@ -89,7 +103,7 @@ describe('subscription', () => {
       }
 
       // Verify verifyCaptcha was called
-      expect(captcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token', '192.168.1.1');
+      expect(captcha.verifyCaptcha).toHaveBeenCalledWith(mockConfig.captcha, 'subscribe', 'captcha-token', '192.168.1.1');
     });
 
     it('should throw HttpError when contact has rejected optInStatus', async () => {
@@ -103,9 +117,9 @@ describe('subscription', () => {
       });
 
       const mockReq = createMockRequest();
-      await expect(subscribe(mockReq)).rejects.toThrow(HttpError);
+      await expect(subscribe(mockConfig, mockReq)).rejects.toThrow(HttpError);
       try {
-        await subscribe(mockReq);
+        await subscribe(mockConfig, mockReq);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(429);
@@ -123,7 +137,7 @@ describe('subscription', () => {
       });
 
       const mockReq = createMockRequest();
-      const result = await subscribe(mockReq);
+      const result = await subscribe(mockConfig, mockReq);
 
       expect(result.success).toBe(true);
       expect(LoopsMock.sendConfirmationMail).not.toHaveBeenCalled();
@@ -146,7 +160,7 @@ describe('subscription', () => {
         mailingLists: ['list-1', 'list-2'],
       } as SubscribeRequest);
 
-      const result = await subscribe(mockReq);
+      const result = await subscribe(mockConfig, mockReq);
 
       expect(result.success).toBe(true);
       expect(LoopsMock.sendConfirmationMail).toHaveBeenCalled();
@@ -170,7 +184,7 @@ describe('subscription', () => {
         { id: 'list-2', name: 'Updates', description: 'Updates', isPublic: true },
       ]);
 
-      const result = await getSubscription('test@example.com');
+      const result = await getSubscription(mockConfig, 'test@example.com');
 
       expect(result).toEqual({
         success: true,
@@ -188,9 +202,9 @@ describe('subscription', () => {
     it('should throw HttpError when contact is not found', async () => {
       LoopsMock.findContact.mockResolvedValue(null);
 
-      await expect(getSubscription('nonexistent@example.com')).rejects.toThrow(HttpError);
+      await expect(getSubscription(mockConfig, 'nonexistent@example.com')).rejects.toThrow(HttpError);
       try {
-        await getSubscription('nonexistent@example.com');
+        await getSubscription(mockConfig, 'nonexistent@example.com');
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(404);
@@ -203,7 +217,7 @@ describe('subscription', () => {
     it('should subscribe contact when subscribe is true', async () => {
       LoopsMock.subscribeContact.mockResolvedValue(undefined);
 
-      const result = await updateSubscription({
+      const result = await updateSubscription(mockConfig, {
         email: 'test@example.com',
         subscribe: true,
         mailingLists: { 'list-1': true },
@@ -220,7 +234,7 @@ describe('subscription', () => {
     it('should unsubscribe contact when subscribe is false', async () => {
       LoopsMock.unsubscribeContact.mockResolvedValue(undefined);
 
-      const result = await updateSubscription({
+      const result = await updateSubscription(mockConfig, {
         email: 'test@example.com',
         subscribe: false,
       });

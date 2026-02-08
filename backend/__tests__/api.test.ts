@@ -4,16 +4,31 @@ jest.mock('node-fetch', () => {
 });
 
 import request from 'supertest';
+
+// Mock configuration before any imports that use it
+import type { Configuration } from '../config';
+const testConfiguration: Configuration = {
+  company: { name: 'Test Company', address: '123 Test St', logo: 'https://example.com/logo.png' },
+  server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600 },
+  loopsSo: { apiKey: 'test-loops-api-key' },
+  captcha: { provider: 'recaptcha', siteKey: 'test-site-key', secret: 'test-recaptcha-secret', threshold: 0.5, branding: 'disclaimer' },
+};
+jest.mock('../config', () => ({
+  ...jest.requireActual('../config'),
+  loadConfiguration: jest.fn(() => testConfiguration)
+}));
+import * as config from '../config';
+
+jest.mock('../subscription');
+jest.mock('../captcha');
+jest.mock('../jwt');
+
 import { app } from '../api';
 import * as subscription from '../subscription';
 import * as captcha from '../captcha';
 import * as jwt from '../jwt';
 import { HttpError } from '../error';
-import { Loops } from '../loops';
-
-jest.mock('../subscription');
-jest.mock('../captcha');
-jest.mock('../jwt');
+import '../loops';
 const LoopsMock = {
   upsertContact: jest.fn(),
   sendConfirmationMail: jest.fn(),
@@ -77,7 +92,7 @@ describe('API routes', () => {
 
   describe('GET /api/captcha', () => {
     it('should return CAPTCHA configuration', async () => {
-      (captcha.configuration as jest.Mock).mockReturnValue({
+      (captcha.configurationEndpoint as jest.Mock).mockReturnValue({
         success: true,
         provider: 'recaptcha',
         site_key: 'test-site-key',
