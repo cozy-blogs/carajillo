@@ -6,15 +6,25 @@ jest.mock('node-fetch', () => {
 import request from 'supertest';
 import { app } from '../api';
 import * as subscription from '../subscription';
-import * as loops from '../loops';
 import * as captcha from '../captcha';
 import * as jwt from '../jwt';
 import { HttpError } from '../error';
+import { Loops } from '../loops';
 
 jest.mock('../subscription');
-jest.mock('../loops');
 jest.mock('../captcha');
 jest.mock('../jwt');
+const LoopsMock = {
+  upsertContact: jest.fn(),
+  sendConfirmationMail: jest.fn(),
+  findContact: jest.fn(),
+  getMailingLists: jest.fn(),
+  subscribeContact: jest.fn(),
+  unsubscribeContact: jest.fn(),
+};
+jest.mock('../loops', () => ({
+  Loops: jest.fn().mockImplementation(() => LoopsMock),
+}));
 
 describe('API routes', () => {
   const originalEnv = process.env;
@@ -91,7 +101,7 @@ describe('API routes', () => {
         { id: 'list-1', name: 'Newsletter', description: 'Main newsletter', isPublic: true },
       ];
 
-      (loops.getMailingLists as jest.Mock).mockResolvedValue(mockLists);
+      LoopsMock.getMailingLists.mockResolvedValue(mockLists);
 
       const response = await request(app)
         .get('/api/lists')

@@ -236,50 +236,6 @@ export class Loops {
   }
 }
 
-/**
- * Default Loops API bound to the configuration loaded from environment variables.
- */
-const defaultLoops = new Loops(loadConfiguration());
-
-export async function initialize(): Promise<void> {
-  return defaultLoops.initialize();
-}
-
-export async function getMailingLists() {
-  return defaultLoops.getMailingLists();
-}
-
-export async function findContact(email: string): Promise<Contact | null> {
-  return defaultLoops.findContact(email);
-}
-
-export async function upsertContact(
-  email: string,
-  properties: ContactProperties,
-  mailingListIds?: string[]
-): Promise<Contact> {
-  return defaultLoops.upsertContact(email, properties, mailingListIds);
-}
-
-export async function subscribeContact(
-  email: string,
-  mailingLists?: MailingLists
-): Promise<void> {
-  return defaultLoops.subscribeContact(email, mailingLists);
-}
-
-export async function unsubscribeContact(email: string): Promise<void> {
-  return defaultLoops.unsubscribeContact(email);
-}
-
-export async function sendConfirmationMail(
-  email: string,
-  confirmUrl: URL,
-  language?: string
-): Promise<void> {
-  return defaultLoops.sendConfirmationMail(email, confirmUrl, language);
-}
-
 function getDoubleOptInStatus(contact: LoopsContact): DoubleOptInStatus {
   const builtInStatus = contact.optInStatus;
   const customStatus = contact.xOptInStatus as DoubleOptInStatus;
