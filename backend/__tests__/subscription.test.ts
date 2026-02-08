@@ -6,11 +6,21 @@ jest.mock('node-fetch', () => {
 import { subscribe, getSubscription, updateSubscription, SubscribeRequest } from '../subscription';
 import { HttpError } from '../error';
 import * as captcha from '../captcha';
-import * as loops from '../loops';
+import { Loops } from '../loops';
 import * as jwt from '../jwt';
 
 jest.mock('../captcha');
-jest.mock('../loops');
+const LoopsMock = {
+  upsertContact: jest.fn(),
+  sendConfirmationMail: jest.fn(),
+  findContact: jest.fn(),
+  getMailingLists: jest.fn(),
+  subscribeContact: jest.fn(),
+  unsubscribeContact: jest.fn(),
+};
+jest.mock('../loops', () => ({
+  Loops: jest.fn().mockImplementation(() => LoopsMock),
+}));
 jest.mock('../jwt');
 
 describe('subscription', () => {
@@ -41,7 +51,7 @@ describe('subscription', () => {
 
     it('should successfully subscribe new contact', async () => {
       (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
-      (loops.upsertContact as jest.Mock).mockResolvedValue({
+      LoopsMock.upsertContact.mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
         subscribed: false,
@@ -49,7 +59,6 @@ describe('subscription', () => {
         mailingLists: { 'list-1': true },
       });
       (jwt.createToken as jest.Mock).mockReturnValue('jwt-token');
-      (loops.sendConfirmationMail as jest.Mock).mockResolvedValue(undefined);
 
       const mockReq = createMockRequest();
       const result = await subscribe(mockReq);
@@ -60,8 +69,8 @@ describe('subscription', () => {
         email: 'test@example.com',
       });
       expect(captcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token', '192.168.1.1');
-      expect(loops.upsertContact).toHaveBeenCalled();
-      expect(loops.sendConfirmationMail).toHaveBeenCalledWith('test@example.com', new URL('https://example.com/control-panel?token=jwt-token&lang=en'), 'en');
+      expect(LoopsMock.upsertContact).toHaveBeenCalled();
+      expect(LoopsMock.sendConfirmationMail).toHaveBeenCalledWith('test@example.com', new URL('https://example.com/control-panel?token=jwt-token&lang=en'), 'en');
     });
 
     it('should throw HttpError when CAPTCHA verification fails', async () => {
@@ -70,7 +79,7 @@ describe('subscription', () => {
 
       const mockReq = createMockRequest();
       await expect(subscribe(mockReq)).rejects.toThrow();
-      
+
       try {
         await subscribe(mockReq);
       } catch (error: any) {
@@ -78,14 +87,14 @@ describe('subscription', () => {
         expect(error.statusCode).toBe(429);
         expect(error.details).toBe('Requestor categorized as bot');
       }
-      
+
       // Verify verifyCaptcha was called
       expect(captcha.verifyCaptcha).toHaveBeenCalledWith('subscribe', 'captcha-token', '192.168.1.1');
     });
 
     it('should throw HttpError when contact has rejected optInStatus', async () => {
       (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
-      (loops.upsertContact as jest.Mock).mockResolvedValue({
+      LoopsMock.upsertContact.mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
         subscribed: false,
@@ -105,7 +114,7 @@ describe('subscription', () => {
 
     it('should not send email when contact is already subscribed to all requested lists', async () => {
       (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
-      (loops.upsertContact as jest.Mock).mockResolvedValue({
+      LoopsMock.upsertContact.mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
         subscribed: true,
@@ -117,12 +126,12 @@ describe('subscription', () => {
       const result = await subscribe(mockReq);
 
       expect(result.success).toBe(true);
-      expect(loops.sendConfirmationMail).not.toHaveBeenCalled();
+      expect(LoopsMock.sendConfirmationMail).not.toHaveBeenCalled();
     });
 
     it('should send email when contact is accepted but missing some mailing lists', async () => {
       (captcha.verifyCaptcha as jest.Mock).mockResolvedValue(true);
-      (loops.upsertContact as jest.Mock).mockResolvedValue({
+      LoopsMock.upsertContact.mockResolvedValue({
         id: 'contact-123',
         email: 'test@example.com',
         subscribed: true,
@@ -130,7 +139,7 @@ describe('subscription', () => {
         mailingLists: { 'list-1': true }, // Missing list-2
       });
       (jwt.createToken as jest.Mock).mockReturnValue('jwt-token');
-      (loops.sendConfirmationMail as jest.Mock).mockResolvedValue(undefined);
+      LoopsMock.sendConfirmationMail.mockResolvedValue(undefined);
 
       const mockReq = createMockRequest({
         ...mockRequestBody,
@@ -140,7 +149,7 @@ describe('subscription', () => {
       const result = await subscribe(mockReq);
 
       expect(result.success).toBe(true);
-      expect(loops.sendConfirmationMail).toHaveBeenCalled();
+      expect(LoopsMock.sendConfirmationMail).toHaveBeenCalled();
     });
   });
 
@@ -155,8 +164,8 @@ describe('subscription', () => {
         referer: 'https://example.com/page',
       };
 
-      (loops.findContact as jest.Mock).mockResolvedValue(mockContact);
-      (loops.getMailingLists as jest.Mock).mockResolvedValue([
+      LoopsMock.findContact.mockResolvedValue(mockContact);
+      LoopsMock.getMailingLists.mockResolvedValue([
         { id: 'list-1', name: 'Newsletter', description: 'Main newsletter', isPublic: true },
         { id: 'list-2', name: 'Updates', description: 'Updates', isPublic: true },
       ]);
@@ -177,7 +186,7 @@ describe('subscription', () => {
     });
 
     it('should throw HttpError when contact is not found', async () => {
-      (loops.findContact as jest.Mock).mockResolvedValue(null);
+      LoopsMock.findContact.mockResolvedValue(null);
 
       await expect(getSubscription('nonexistent@example.com')).rejects.toThrow(HttpError);
       try {
@@ -192,7 +201,7 @@ describe('subscription', () => {
 
   describe('updateSubscription', () => {
     it('should subscribe contact when subscribe is true', async () => {
-      (loops.subscribeContact as jest.Mock).mockResolvedValue(undefined);
+      LoopsMock.subscribeContact.mockResolvedValue(undefined);
 
       const result = await updateSubscription({
         email: 'test@example.com',
@@ -205,11 +214,11 @@ describe('subscription', () => {
         email: 'test@example.com',
         subscribed: true,
       });
-      expect(loops.subscribeContact).toHaveBeenCalledWith('test@example.com', { 'list-1': true });
+      expect(LoopsMock.subscribeContact).toHaveBeenCalledWith('test@example.com', { 'list-1': true });
     });
 
     it('should unsubscribe contact when subscribe is false', async () => {
-      (loops.unsubscribeContact as jest.Mock).mockResolvedValue(undefined);
+      LoopsMock.unsubscribeContact.mockResolvedValue(undefined);
 
       const result = await updateSubscription({
         email: 'test@example.com',
@@ -221,7 +230,7 @@ describe('subscription', () => {
         email: 'test@example.com',
         subscribed: false,
       });
-      expect(loops.unsubscribeContact).toHaveBeenCalledWith('test@example.com');
+      expect(LoopsMock.unsubscribeContact).toHaveBeenCalledWith('test@example.com');
     });
   });
 });

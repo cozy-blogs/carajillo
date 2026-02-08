@@ -1,8 +1,9 @@
 import { Request } from 'express';
 import { HttpError } from './error';
 import { verifyCaptcha } from './captcha';
-import { findContact, upsertContact, sendConfirmationMail, subscribeContact, unsubscribeContact, getMailingLists } from './loops';
+import { Loops } from './loops';
 import { createToken } from './jwt';
+import { loadConfiguration } from './config';
 
 export type SubscribeRequest = {
   email : string;
@@ -31,6 +32,9 @@ export async function subscribe(req: Request) {
 
   const {email, mailingLists, captchaToken, ...properties} = request;
 
+  const config = loadConfiguration();
+  const loops = new Loops(config);
+
   const valid = await verifyCaptcha('subscribe', captchaToken, remoteIp);
   if (!valid) {
     throw new HttpError({
@@ -40,7 +44,7 @@ export async function subscribe(req: Request) {
     });
   }
 
-  const contact = await upsertContact(email, properties, mailingLists);
+  const contact = await loops.upsertContact(email, properties, mailingLists);
   if (contact.optInStatus == 'rejected') {
     throw new HttpError({
       statusCode: 429,
@@ -61,7 +65,7 @@ export async function subscribe(req: Request) {
   if (properties.language !== undefined) {
     params.set('lang', properties.language)
   }
-  await sendConfirmationMail(contact.email, new URL(`/control-panel?${params}`, rootUrl), properties.language);
+  await loops.sendConfirmationMail(contact.email, new URL(`/control-panel?${params}`, rootUrl), properties.language);
 
   return {success: true, doubleOptIn: true, email};
 }
@@ -96,11 +100,13 @@ export interface SubscriptionStatus {
 }
 
 export async function getSubscription(email: string): Promise<SubscriptionStatus> {
-  const contact = await findContact(email);
+  const config = loadConfiguration();
+  const loops = new Loops(config);
+  const contact = await loops.findContact(email);
   if (contact === null) {
     throw new HttpError({statusCode: 404, message: 'Contact not found'});
   }
-  const availableMailingLists = await getMailingLists();
+  const availableMailingLists = await loops.getMailingLists();
   return {
     success: true,
     email: contact.email,
@@ -132,10 +138,12 @@ export interface UpdateSubscriptionRequest {
 }
 
 export async function updateSubscription({email, subscribe, mailingLists}: UpdateSubscriptionRequest) {
+  const config = loadConfiguration();
+  const loops = new Loops(config);
   if (subscribe) {
-    await subscribeContact(email, mailingLists);   
+    await loops.subscribeContact(email, mailingLists);
   } else {
-    await unsubscribeContact(email);
+    await loops.unsubscribeContact(email);
   }
   return {success: true, email, subscribed: subscribe};
 }

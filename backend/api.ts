@@ -1,17 +1,25 @@
 
 import express, { Router } from "express";
+
+// middleware
 import cors from "cors";
 import { middleware as errorMiddleware, HttpError } from "./error";
 import { middleware as openApiValidator } from "express-openapi-validator";
 import { openApiSpec } from "./openapi-spec";
 import { authenticate } from "./jwt";
-import { subscribe, getSubscription, updateSubscription } from "./subscription"
-import type { SubscribeRequest, UpdateSubscriptionRequest } from "./subscription";
-import { getMailingLists } from "./loops";
-import { configuration as captchaConfiguration } from "./captcha";
 import rateLimit from "express-rate-limit";
+
+// business logic
+import { subscribe, getSubscription, updateSubscription } from "./subscription"
+import type { UpdateSubscriptionRequest } from "./subscription";
+import { Loops } from "./loops";
+import { configuration as captchaConfiguration } from "./captcha";
+import { loadConfiguration } from "./config";
+
+// utilities
 import ms from "ms";
 
+const config = loadConfiguration();
 export const app = express();
 
 // There is no need for ETag.
@@ -155,7 +163,8 @@ router.get("/captcha", async (req, res) => {
 });
 
 router.get("/lists", async (req, res) => {
-  const response = await getMailingLists();
+  const loops = new Loops(config);
+  const response = await loops.getMailingLists();
   res.json(response);
 });
 
