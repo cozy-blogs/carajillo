@@ -1,8 +1,11 @@
-import { initialize } from "../../backend/loops";
+import { Loops } from "../../backend/loops";
+import { loadConfiguration } from "../../backend/config";
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions'; 
 
 export const handler :Handler = async (event: HandlerEvent, context: HandlerContext) => {
-  await initialize();
+  const config = loadConfiguration();
+  const loops = new Loops(config);
+  await loops.initialize();
   return {
     statusCode: 200,
     headers: {'Content-Type': 'application/json'},

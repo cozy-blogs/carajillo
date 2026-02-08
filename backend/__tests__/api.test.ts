@@ -42,7 +42,7 @@ jest.mock('../loops', () => ({
 }));
 
 describe('API routes', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
