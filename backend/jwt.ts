@@ -1,13 +1,9 @@
 
 import { sign, verify, JwtPayload, Algorithm, JsonWebTokenError, TokenExpiredError, NotBeforeError, SignOptions} from 'jsonwebtoken';
 import { HttpError } from './error';
-import { StringValue as TimeDeltaString } from 'ms';
 import { Request } from 'express';
+import type { ServerConfiguration } from './config';
 
-const SECRET = process.env.JWT_SECRET;
-// @todo refresh mechanism is needed to really handle expiration
-// @see https://www.npmjs.com/package/ms
-const TOKEN_EXPIRATION : TimeDeltaString = process.env.JWT_EXPIRATION as TimeDeltaString || '1 year';
 const ALGORITHM : Algorithm = 'HS512'; // HMAC with SHA-512 hash
 
 /***
@@ -16,36 +12,27 @@ const ALGORITHM : Algorithm = 'HS512'; // HMAC with SHA-512 hash
  * @param email  User's email address
  * @see https://datatracker.ietf.org/doc/html/rfc7519
  */
-export function createToken(email: string, issuer: URL): string
+export function createToken(config: ServerConfiguration, email: string, issuer: URL): string
 {
-  if (SECRET === undefined) {
-    throw new HttpError({
-      statusCode: 500,
-      reason: 'server-configuration-error',
-      message: "Server configuration error",
-      details: "JWT_SECRET not defined"
-    });
-  }
-
   const options : SignOptions = {
       subject: email,
       issuer: issuer.hostname,
       algorithm: ALGORITHM,
-      expiresIn: TOKEN_EXPIRATION,
+      expiresIn: config.jwtExpiration,
   };
   console.debug('createToken', options);
 
-  return sign ({}, SECRET, options);
+  return sign ({}, config.jwtSecret, options);
 }
 
-export function authenticate(req: Request): string {
+export function authenticate(config: ServerConfiguration, req: Request): string {
   const token = req.headers.authorization?.match(/Bearer ([^ ]+)/);
   if (!token)
     throw new HttpError({statusCode: 401, reason: 'missing-token', message: 'Unauthorized'});
   // @todo WWW-Authenticate header?
   // https://datatracker.ietf.org/doc/html/rfc6750#section-3
 
-  return validateToken(token[1], req.hostname);
+  return validateToken(config, token[1], req.hostname);
 }
 
 /**
@@ -54,22 +41,14 @@ export function authenticate(req: Request): string {
  * Throws 401 Unauthorized if verification fails.
  * @return User's email address
  */
-export function validateToken(jwt: string, issuer: string): string
+export function validateToken(config: ServerConfiguration, jwt: string, issuer: string): string
 {
-  if (SECRET === undefined) {
-    throw new HttpError({
-      statusCode: 500,
-      message: "Server configuration error",
-      details: "JWT_SECRET not defined"
-    });
-  }
-
   // @todo add way rotate the server secret and client token after expiration
   let payload: JwtPayload;
   
   try {
     console.debug('validateToken', jwt);
-    payload = verify(jwt, SECRET, {
+    payload = verify(jwt, config.jwtSecret, {
       algorithms: [ALGORITHM],
       complete: false,
       issuer

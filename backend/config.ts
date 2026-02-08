@@ -18,7 +18,8 @@ const DEFAULT_CONFIGURATION = {
   server: {
     numberOfProxies: 1,
     jwtExpiration: ms.default('1 year'),
-    corsOrigin: [] as string[],
+    corsOrigin: false as string[] | boolean,
+    environment: 'production' as Environment,
   },
   captcha: {
     provider: 'none' as CaptchaProvider,
@@ -41,6 +42,8 @@ export interface CompanyConfiguration {
   logo?: string;
 }
 
+type Environment = 'production' | 'development' | 'test';
+
 export interface ServerConfiguration {
   /** @brief Number of proxies before the backend.
    * @details This is the number from the X-forwarded-for header that should be trusted. (env:NUMBER_OF_PROXIES)
@@ -49,10 +52,10 @@ export interface ServerConfiguration {
 
   /** @brief Domains where submission forms may be created.
    * @details This is the list of origins (domains, protocols, ports) that are allowed to create submission forms.
-   * (env:CORS_ORIGIN space separated list) default: ['*'] (all origins are allowed)
+   * (env:CORS_ORIGIN space separated list) default: false (all origins are blocked)
    * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
    */
-  corsOrigin: string[];
+  corsOrigin: string[] | boolean;
 
   /**
    * @brief Secret key for JWT token signing.
@@ -65,6 +68,11 @@ export interface ServerConfiguration {
    * @see https://github.com/vercel/ms#readme for time delta syntax.
    */
   jwtExpiration: number;
+
+  /** @brief Environment. (env:NODE_ENV)
+   * @details Default: 'production'
+   */
+  environment: Environment;
 }
 
 /**
@@ -145,9 +153,9 @@ function loadCaptchaEnv(env: NodeJS.ProcessEnv = process.env): CaptchaConfigurat
 
 function parseProvider(provider?: string): CaptchaProvider {
   switch (provider) {
+    case 'recaptcha':
     case 'hcaptcha':
     case 'none':
-    case 'recaptcha':
       return provider;
     case undefined:
       return DEFAULT_CONFIGURATION.captcha.provider;
@@ -227,11 +235,13 @@ function loadServerEnv(env: NodeJS.ProcessEnv = process.env): ServerConfiguratio
     throw new Error('JWT_SECRET is not set');
   }
   const jwtExpiration = parseJwtExpiration(env.JWT_EXPIRATION);
+  const environment = parseEnvironment(env.NODE_ENV);
   return {
     numberOfProxies,
     corsOrigin,
     jwtSecret: env.JWT_SECRET,
-    jwtExpiration
+    jwtExpiration,
+    environment,
   };
 }
 
@@ -246,11 +256,35 @@ function parseNumberOfProxies(value?: string): number {
   return parsed;
 }
 
-function parseCorsOrigin(value?: string): string[] {
+function parseCorsOrigin(value?: string): string[] | boolean {
+  const defaultValue = DEFAULT_CONFIGURATION.server.corsOrigin;
+
   if (value === undefined) {
-    return DEFAULT_CONFIGURATION.server.corsOrigin;
+    return defaultValue;
   }
-  return value.trim().split(/\s+/).filter(origin => origin);
+  // @todo verify correct format, strip /
+  const origins = value.trim().split(/\s+/).filter(origin => origin);
+  if (origins.length === 0) {
+    return defaultValue;
+  } else if (origins.includes('*')) {
+    // Cors middleware won't process ['*'] correctly. It has to be '*' or true.
+    // '*' would mean to set Access-Control-Allow-Origin response header literally to '*'.
+    // true would mean to set Access-Control-Allow-Origin to the request origin.
+    // First option (Access-Control-Allow-Origin: *) in conjunction with Access-Control-Allow-Credentials: true
+    // is blocked by browsers for security reasons (so called wildcard exception).
+    // Second option (reflecting the request origin) is removing the safety guard.
+    // It should be fine though since credentials are not sent through cookies and responses are not cached (Cache-Control: no-store)
+    // and not shared across domains (Vary: Origin).
+    // Still, it is better to be explicit and allow only the domains that are allowed to create submission forms.
+    // Read more:
+    // * https://github.com/expressjs/cors/issues/333
+    // * https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS#credentialed_requests_and_wildcards
+    // * https://jub0bs.com/posts/2023-02-08-fearless-cors/
+    console.warn('CORS_ORIGIN is set to "*". This is not recommended. Use CORS_ORIGIN to allow only the domains that are allowed to create submission forms.');
+
+    return true;
+  }
+  return origins;
 }
 
 function parseJwtExpiration(value?: string): number {
@@ -262,6 +296,20 @@ function parseJwtExpiration(value?: string): number {
     throw new Error(`JWT_EXPIRATION must be a valid time delta: ${value}`);
   }
   return parsed;
+}
+
+function parseEnvironment(value?: string): Environment {
+  if (value === undefined) {
+    return DEFAULT_CONFIGURATION.server.environment;
+  }
+  switch (value) {
+    case 'production':
+    case 'development':
+    case 'test':
+      return value;
+    default:
+      throw new Error(`Unsupported environment: ${value}`);
+  }
 }
 
 function loadLoopsSoEnv(env: NodeJS.ProcessEnv = process.env): LoopsSoConfiguration {
@@ -302,7 +350,7 @@ COMPANY_ADDRESS=${config.company.address}
 COMPANY_LOGO=${config.company.logo}
 
 # Domains where submission forms may be created
-CORS_ORIGIN=${config.server.corsOrigin.join(' ')}
+CORS_ORIGIN=${Array.isArray(config.server.corsOrigin) ? config.server.corsOrigin.join(' ') : config.server.corsOrigin ? '*' : ''}
 
 # Number of proxies to trust
 # @see https://github.com/express-rate-limit/express-rate-limit/wiki/Troubleshooting-Proxy-Issues

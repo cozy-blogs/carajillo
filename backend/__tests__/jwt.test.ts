@@ -2,25 +2,24 @@ import { createToken, authenticate, validateToken } from '../jwt';
 import { Request } from 'express';
 import { HttpError } from '../error';
 import * as jwt from 'jsonwebtoken';
+import type { ServerConfiguration } from '../config';
 
 // Mock jsonwebtoken
 jest.mock('jsonwebtoken');
 
+const testConfig: ServerConfiguration = {
+  numberOfProxies: 1,
+  corsOrigin: ['https://example.com'],
+  jwtSecret: 'test-jwt-secret',
+  jwtExpiration: 3600,
+  environment: 'test',
+};
+
 describe('JWT', () => {
-  const originalEnv = process.env;
-  const testSecret = 'test-secret-key-for-jwt-signing';
   const testEmail = 'test@example.com';
   const testIssuer = 'example.com';
 
-  beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...originalEnv };
-    process.env.JWT_SECRET = testSecret;
-    process.env.JWT_EXPIRATION = '1 year';
-  });
-
   afterEach(() => {
-    process.env = originalEnv;
     jest.clearAllMocks();
   });
 
@@ -30,43 +29,19 @@ describe('JWT', () => {
       mockSign.mockReturnValue('mock-token');
 
       const issuer = new URL('https://example.com');
-      const token = createToken(testEmail, issuer);
+      const token = createToken(testConfig, testEmail, issuer);
 
       expect(mockSign).toHaveBeenCalledWith(
         {},
-        testSecret,
+        testConfig.jwtSecret,
         expect.objectContaining({
           subject: testEmail,
           issuer: issuer.hostname,
           algorithm: 'HS512',
-          expiresIn: '1 year',
+          expiresIn: testConfig.jwtExpiration,
         })
       );
       expect(token).toBe('mock-token');
-    });
-
-    it('should throw HttpError when JWT_SECRET is not defined', async () => {
-      // Note: This test verifies the error handling logic
-      // In practice, JWT_SECRET is checked at module load time
-      const originalSecret = process.env.JWT_SECRET;
-      delete process.env.JWT_SECRET;
-      
-      jest.resetModules();
-      const jwtModule = await import('../jwt');
-      const issuer = new URL('https://example.com');
-      
-      // The error should be thrown
-      expect(() => jwtModule.createToken(testEmail, issuer)).toThrow();
-      
-      // Verify it's an error with the correct message
-      try {
-        jwtModule.createToken(testEmail, issuer);
-      } catch (error: any) {
-        expect(error.message).toContain('Server configuration error');
-        expect(error.statusCode).toBe(500);
-      }
-      
-      process.env.JWT_SECRET = originalSecret;
     });
   });
 
@@ -75,11 +50,11 @@ describe('JWT', () => {
       const mockVerify = jwt.verify as jest.Mock;
       mockVerify.mockReturnValue({ sub: testEmail });
 
-      const email = validateToken('valid-token', testIssuer);
+      const email = validateToken(testConfig, 'valid-token', testIssuer);
 
       expect(mockVerify).toHaveBeenCalledWith(
         'valid-token',
-        testSecret,
+        testConfig.jwtSecret,
         expect.objectContaining({
           algorithms: ['HS512'],
           complete: false,
@@ -89,28 +64,6 @@ describe('JWT', () => {
       expect(email).toBe(testEmail);
     });
 
-    it('should throw HttpError when JWT_SECRET is not defined', async () => {
-      // Note: Similar to createToken test - verify error handling logic
-      const originalSecret = process.env.JWT_SECRET;
-      delete process.env.JWT_SECRET;
-      
-      jest.resetModules();
-      const jwtModule = await import('../jwt');
-      
-      // The error should be thrown (validateToken is synchronous)
-      expect(() => jwtModule.validateToken('token', testIssuer)).toThrow();
-      
-      // Verify it's an error with the correct message
-      try {
-        jwtModule.validateToken('token', testIssuer);
-      } catch (error: any) {
-        expect(error.message).toContain('Server configuration error');
-        expect(error.statusCode).toBe(500);
-      }
-      
-      process.env.JWT_SECRET = originalSecret;
-    });
-
     it('should throw HttpError with expired-token reason when token is expired', () => {
       const mockVerify = jwt.verify as jest.Mock;
       const expiredError = new jwt.TokenExpiredError('Token expired', new Date());
@@ -118,9 +71,9 @@ describe('JWT', () => {
         throw expiredError;
       });
 
-      expect(() => validateToken('expired-token', testIssuer)).toThrow(HttpError);
+      expect(() => validateToken(testConfig, 'expired-token', testIssuer)).toThrow(HttpError);
       try {
-        validateToken('expired-token', testIssuer);
+        validateToken(testConfig, 'expired-token', testIssuer);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(401);
@@ -135,9 +88,9 @@ describe('JWT', () => {
         throw invalidError;
       });
 
-      expect(() => validateToken('invalid-token', testIssuer)).toThrow(HttpError);
+      expect(() => validateToken(testConfig, 'invalid-token', testIssuer)).toThrow(HttpError);
       try {
-        validateToken('invalid-token', testIssuer);
+        validateToken(testConfig, 'invalid-token', testIssuer);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(401);
@@ -149,9 +102,9 @@ describe('JWT', () => {
       const mockVerify = jwt.verify as jest.Mock;
       mockVerify.mockReturnValue({}); // No 'sub' field
 
-      expect(() => validateToken('token', testIssuer)).toThrow(HttpError);
+      expect(() => validateToken(testConfig, 'token', testIssuer)).toThrow(HttpError);
       try {
-        validateToken('token', testIssuer);
+        validateToken(testConfig, 'token', testIssuer);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(401);
@@ -172,7 +125,7 @@ describe('JWT', () => {
         hostname: testIssuer,
       } as unknown as Request;
 
-      const email = authenticate(mockRequest);
+      const email = authenticate(testConfig, mockRequest);
 
       expect(email).toBe(testEmail);
       expect(mockVerify).toHaveBeenCalled();
@@ -184,9 +137,9 @@ describe('JWT', () => {
         hostname: testIssuer,
       } as unknown as Request;
 
-      expect(() => authenticate(mockRequest)).toThrow(HttpError);
+      expect(() => authenticate(testConfig, mockRequest)).toThrow(HttpError);
       try {
-        authenticate(mockRequest);
+        authenticate(testConfig, mockRequest);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
         expect((error as HttpError).statusCode).toBe(401);
@@ -202,7 +155,7 @@ describe('JWT', () => {
         hostname: testIssuer,
       } as unknown as Request;
 
-      expect(() => authenticate(mockRequest)).toThrow(HttpError);
+      expect(() => authenticate(testConfig, mockRequest)).toThrow(HttpError);
     });
   });
 });

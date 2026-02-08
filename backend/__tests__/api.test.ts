@@ -9,7 +9,7 @@ import request from 'supertest';
 import type { Configuration } from '../config';
 const testConfiguration: Configuration = {
   company: { name: 'Test Company', address: '123 Test St', logo: 'https://example.com/logo.png' },
-  server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600 },
+  server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600, environment: 'test' },
   loopsSo: { apiKey: 'test-loops-api-key' },
   captcha: { provider: 'recaptcha', siteKey: 'test-site-key', secret: 'test-recaptcha-secret', threshold: 0.5, branding: 'disclaimer' },
 };
@@ -42,22 +42,8 @@ jest.mock('../loops', () => ({
 }));
 
 describe('API routes', () => {
-  const originalEnv = process.env;
-
   beforeEach(() => {
-    process.env = { ...originalEnv };
-    process.env.NODE_ENV = 'test';
-    process.env.COMPANY_NAME = 'Test Company';
-    process.env.COMPANY_ADDRESS = '123 Test St';
-    process.env.COMPANY_LOGO = 'https://example.com/logo.png';
-    process.env.CORS_ORIGIN = 'http://localhost:3000';
-    jest.resetModules();
-
     jest.clearAllMocks();
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
   });
 
   describe('GET /api/company', () => {
@@ -70,22 +56,6 @@ describe('API routes', () => {
         name: 'Test Company',
         address: '123 Test St',
         logo: 'https://example.com/logo.png',
-      });
-    });
-
-    it('should return empty strings when company info is not set', async () => {
-      delete process.env.COMPANY_NAME;
-      delete process.env.COMPANY_ADDRESS;
-      delete process.env.COMPANY_LOGO;
-
-      const response = await request(app)
-        .get('/api/company')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        name: '',
-        address: '',
-        logo: undefined,
       });
     });
   });
@@ -258,12 +228,12 @@ describe('API routes', () => {
     it('should include CORS headers', async () => {
       const response = await request(app)
         .get('/api/company')
-        .set('Origin', 'http://localhost:3000')
+        .set('Origin', 'https://example.com')
         .expect(200);
 
       // CORS middleware should be applied - check for CORS headers
       // Note: CORS headers may vary, but origin should be set
-      expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+      expect(response.headers['access-control-allow-origin']).toBe('https://example.com');
       expect(response.headers['vary']).toBe('Origin');
     });
   });
