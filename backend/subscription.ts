@@ -59,7 +59,7 @@ export async function subscribe(config: Configuration, req: Request) {
     }
   }
 
-  const token = createToken(contact.email, rootUrl);
+  const token = createToken(config.server, contact.email, rootUrl);
   const params = new URLSearchParams({token});
   if (properties.language !== undefined) {
     params.set('lang', properties.language)

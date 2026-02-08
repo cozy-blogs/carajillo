@@ -31,7 +31,7 @@ app.set('etag', false);
 // Do not expose the tech stack
 app.set('x-powered-by', false);
 
-const numberOfProxies = process.env.NUMBER_OF_PROXIES ? parseInt(process.env.NUMBER_OF_PROXIES) : 1;
+const numberOfProxies = config.server.numberOfProxies;
 // Netlify serves as proxy for the express app.
 // @see https://expressjs.com/en/guide/behind-proxies.html
 // @see https://express-rate-limit.mintlify.app/reference/error-codes#err-erl-permissive-trust-proxy
@@ -61,43 +61,10 @@ app.use((req, res, next) => {
 // Parse strings as simple key-value pairs.
 app.set('query parser', 'simple');
 
-function parseCorsOrigin(value?: string): string[] | boolean {
-  const defaultValue = false;
-
-  if (value === undefined) {
-    return defaultValue;
-  }
-  // @todo verify correct format, strip /
-  const origins = value.trim().split(/\s+/).filter(origin => origin);
-  if (origins.length === 0) {
-    return defaultValue;
-  } else if (origins.includes('*')) {
-    // Cors middleware won't process ['*'] correctly. It has to be '*' or true.
-    // '*' would mean to set Access-Control-Allow-Origin response header literally to '*'.
-    // true would mean to set Access-Control-Allow-Origin to the request origin.
-    // First option (Access-Control-Allow-Origin: *) in conjunction with Access-Control-Allow-Credentials: true
-    // is blocked by browsers for security reasons (so called wildcard exception).
-    // Second option (reflecting the request origin) is removing the safety guard.
-    // It should be fine though since credentials are not sent through cookies and responses are not cached (Cache-Control: no-store)
-    // and not shared across domains (Vary: Origin).
-    // Still, it is better to be explicit and allow only the domains that are allowed to create submission forms.
-    // Read more:
-    // * https://github.com/expressjs/cors/issues/333
-    // * https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS#credentialed_requests_and_wildcards
-    // * https://jub0bs.com/posts/2023-02-08-fearless-cors/
-    console.warn('CORS_ORIGIN is set to "*". This is not recommended. Use CORS_ORIGIN to allow only the domains that are allowed to create submission forms.');
-
-    return true;
-  }
-  return origins;
-}
-
 // Configure CORS to allow cross-origin requests
 // By default cross site requests are blocked.
-// Set CORS_ORIGIN to space separated list of 
-// '*' to allow all origins, or to a list of allowed origins.
 const corsMiddleware = cors({
-  origin: parseCorsOrigin(process.env.CORS_ORIGIN),
+  origin: config.server.corsOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -126,9 +93,9 @@ const authenticateRateLimiter = rateLimit({
 
 router.get("/company", async (req, res) => {
   res.json({
-    name: process.env.COMPANY_NAME || '',
-    address: process.env.COMPANY_ADDRESS || '',
-    logo: process.env.COMPANY_LOGO,
+    name: config.company.name,
+    address: config.company.address,
+    logo: config.company.logo,
   });
 });
 
@@ -137,12 +104,12 @@ router.post("/subscription", subscribeRateLimiter, async (req, res) => {
   res.json(response);
 });
 router.get("/subscription", authenticateRateLimiter, async (req, res) => {
-  const email = authenticate(req);
+  const email = authenticate(config.server, req);
   const response = await getSubscription(config, email);
   res.json(response);
 });
 router.put("/subscription", authenticateRateLimiter, async (req, res) => {
-  const email = authenticate(req);
+  const email = authenticate(config.server, req);
   const request = req.body as UpdateSubscriptionRequest;
   if (request.email !== email) {
     throw new HttpError({
@@ -168,7 +135,7 @@ router.get("/lists", async (req, res) => {
   res.json(response);
 });
 
-if (process.env.NODE_ENV === "development") {
+if (config.server.environment === 'development') {
   router.get("/test/ip", async (req: express.Request, res: express.Response) => {
     res.json({
       number_of_proxies: numberOfProxies,

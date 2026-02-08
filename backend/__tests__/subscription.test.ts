@@ -14,7 +14,7 @@ jest.mock('../captcha');
 jest.mock('../config');
 const mockConfig: Configuration = {
   company: { name: 'Test Company', address: '123 Test St', logo: 'https://example.com/logo.png' },
-  server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600 },
+  server: { numberOfProxies: 1, corsOrigin: ['https://example.com'], jwtSecret: 'test-jwt-secret', jwtExpiration: 3600, environment: 'test' },
   loopsSo: { apiKey: 'test-loops-api-key' },
   captcha: {
     provider: 'recaptcha',
