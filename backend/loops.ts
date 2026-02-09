@@ -83,6 +83,46 @@ export class Loops {
     console.info("loops initialized successfully");
   }
 
+  async verifyConfiguration(): Promise<void> {
+    await this.client.testApiKey();
+
+    const transactionalEmails = await this.fetchTransactionalEmails();
+    let doubleOptInEmails = 0;
+    let tokenRefreshEmails = 0;
+    let errors = [];
+    for (const email of transactionalEmails) {
+      console.log(`Transactional email ${JSON.stringify(email.name)} has data variables: ${JSON.stringify(email.dataVariables)}`);
+      if (email.dataVariables.includes("xOptInUrl")) {
+        doubleOptInEmails++;
+      } else if (email.dataVariables.includes("xTokenRefreshUrl")) {
+        tokenRefreshEmails++;
+      } else {
+        continue;
+      }
+
+      const language = /#[A-Z]{2}\b/.exec(email.name);
+      if (language === null) {
+        errors.push(`Transactional email ${JSON.stringify(email.name)} does not have language specified; use #<ISO 639-1 code> in the email name`);
+      }
+
+      const dataVariables = new Set(email.dataVariables);
+      const providedVariables = new Set(['xOptInUrl', 'xTokenRefreshUrl', 'companyName', 'companyAddress', 'companyLogo']);
+      if (!dataVariables.isSubsetOf(providedVariables)) {
+        errors.push(`Transactional email ${JSON.stringify(email.name)} has unexpected data variables: ${dataVariables.difference(providedVariables)}`);
+      }
+    }
+
+    if (doubleOptInEmails === 0) {
+      errors.push("No double opt-in email configured");
+    }
+    if (tokenRefreshEmails === 0) {
+      errors.push("No token refresh email configured");
+    }
+    if (errors.length > 0) {
+      throw new Error(`Loops configuration verification failed: ${errors.join(", ")}`);
+    }
+  }
+
   /**
    * Get publicly available mailing lists.
    */
