@@ -5,6 +5,7 @@ import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 export const handler :Handler = async (event: HandlerEvent, context: HandlerContext) => {
   const config = loadConfiguration();
   const loops = new Loops(config);
+  await loops.verifyConfiguration();
   await loops.initialize();
   return {
     statusCode: 200,
