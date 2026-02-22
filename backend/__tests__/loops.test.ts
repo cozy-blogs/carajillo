@@ -313,7 +313,7 @@ describe('loops', () => {
           new URL('https://example.com/confirm'),
           'en'
         )
-      ).rejects.toThrow('No confirmation email configured');
+      ).rejects.toThrow('No transactional email configured');
     });
 
     it('should use company data from passed configuration', async () => {

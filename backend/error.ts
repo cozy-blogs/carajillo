@@ -46,4 +46,4 @@ export const middleware : ErrorRequestHandler = (err, req, res, next) => {
       error: err instanceof Error ? err.message : 'Unknown error occurred'
     });
   }
-} 
+}

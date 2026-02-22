@@ -137,6 +137,32 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /user/refresh:
+    post:
+      summary: Refresh user's token
+      operationId: refreshUserToken
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshUserTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshUserTokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /test/{endpoint}:
     parameters:
       - name: endpoint
@@ -211,9 +237,13 @@ components:
     Company:
       type: object
       required:
+        - success
         - name
         - address
       properties:
+        success:
+          type: boolean
+          example: true
         name:
           type: string
           description: Name of the company
@@ -410,6 +440,31 @@ components:
         subscribed:
           type: boolean
           example: true
+      additionalProperties: false
+
+    RefreshUserTokenRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address (optional, if provided must match JWT token subject)
+          example: "user@example.com"
+
+    RefreshUserTokenResponse:
+      description: Token refreshed successfully, new token is sent to the user's email address.
+      type: object
+      required:
+        - success
+        - email
+      properties:
+        success:
+          type: boolean
+          example: true
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
       additionalProperties: false
 
     ErrorResponse:

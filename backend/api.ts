@@ -10,7 +10,7 @@ import { authenticate } from "./jwt";
 import rateLimit from "express-rate-limit";
 
 // business logic
-import { subscribe, getSubscription, updateSubscription } from "./subscription"
+import { subscribe, getSubscription, updateSubscription, refreshUserToken } from "./subscription"
 import type { UpdateSubscriptionRequest } from "./subscription";
 import { Loops } from "./loops";
 import { configurationEndpoint as captchaConfiguration } from "./captcha";
@@ -93,6 +93,7 @@ const authenticateRateLimiter = rateLimit({
 
 router.get("/company", async (req, res) => {
   res.json({
+    success: true,
     name: config.company.name,
     address: config.company.address,
     logo: config.company.logo,
@@ -119,6 +120,10 @@ router.put("/subscription", authenticateRateLimiter, async (req, res) => {
     });
   }
   const response = await updateSubscription(config, request);
+  res.json(response);
+});
+router.post("/user/refresh", authenticateRateLimiter, async (req, res) => {
+  const response = await refreshUserToken(config, req);
   res.json(response);
 });
 

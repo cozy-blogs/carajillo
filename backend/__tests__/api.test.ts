@@ -53,6 +53,7 @@ describe('API routes', () => {
         .expect(200);
 
       expect(response.body).toEqual({
+        success: true,
         name: 'Test Company',
         address: '123 Test St',
         logo: 'https://example.com/logo.png',

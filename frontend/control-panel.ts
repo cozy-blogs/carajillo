@@ -16,6 +16,7 @@ import { initializeLocale } from './localize';
 import { SubscriptionChangeEvent } from './mailing-lists';
 import type { SubscriptionStatus, UpdateSubscriptionRequest } from '../backend/subscription';
 import type { Company } from './company';
+import { validateResponse, TokenExpiredError } from './authentication';
 
 // lit
 import { LitElement, html, css } from 'lit';
@@ -142,7 +143,7 @@ export class ControlPanel extends LitElement {
           error: (error) => html`<ca-status-message><md-icon slot="icon">error</md-icon>${String(error)}</ca-status-message>`
         });
         return html`
-          <div class="container">  
+          <div class="container">
             <ca-company .company=${company}></ca-company>
             <div class="update-status">
               ${updateStatus}
@@ -151,7 +152,18 @@ export class ControlPanel extends LitElement {
             ${subscription.referer ? html`<md-filled-button @click=${this.close}>${msg('Go back')}<md-icon slot="icon">sentiment_satisfied</md-icon></md-filled-button>` : html``}
           </div>`;
       },
-      error: (error) => html`<ca-status-message><md-icon slot="icon">error</md-icon>${String(error)}</ca-status-message>`
+      error: (error) => {
+        console.error('fetchSubscriptionTask error', error);
+        if (error instanceof TokenExpiredError) {
+          return html`
+            <div class="container">
+              <ca-token-refresh .token=${this.token} .error=${error.message}></ca-token-refresh>
+            </div>
+          `;
+        } else {
+          return html`<ca-status-message><md-icon slot="icon">error</md-icon>${(error as Error).message}</ca-status-message>`;
+        }
+      }
     });
   }
 
@@ -190,23 +202,15 @@ export class ControlPanel extends LitElement {
           signal
         })
       ]);
-      if (!companyResponse.ok) {
-        throw new Error(msg('Failed to fetch company information'));
-      }
-      if (!subscriptionResponse.ok) {
-        // @todo handle token refresh
-        throw new Error(msg('Failed to fetch subscription status'));
-      }
-      this.company = await companyResponse.json() as Company;
-
-      this.subscription = await subscriptionResponse.json() as SubscriptionStatus;
+      this.company = await validateResponse(companyResponse) as Company;
+      this.subscription = await validateResponse(subscriptionResponse) as SubscriptionStatus;
       this.handleAutosubscribe();
 
       return [this.company, this.subscription];
     },
     args: () => [this.token]
   });
-  
+
   private updateSubscriptionTask = new Task<[UpdateSubscriptionRequest], void>(this, {
     task: async ([update], {signal}) => {
       if (this.token === undefined) {
@@ -214,7 +218,7 @@ export class ControlPanel extends LitElement {
       }
       if (this.subscription === undefined)
         throw new Error(msg('Subscription not found'));
-      
+
       const response = await fetch(`${apiRoot}/subscription`, {
         method: 'PUT',
         headers: {
