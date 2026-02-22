@@ -13,9 +13,9 @@ Newsletter subscription management for [Loops](https://loops.so/).
 
 ## Roadmap
 
-- [ ] [hCaptcha](https://www.hcaptcha.com/) support
+- [x] [hCaptcha](https://www.hcaptcha.com/) support
 - [ ] Subscription token rotation/refresh
-- [ ] Loops configuration verification
+- [x] Loops configuration verification
 
 ## Setup
 
@@ -63,6 +63,9 @@ Use the following data variables:
  - `companyName`,
  - `companyAddress`,
  - `companyLogo`.
+
+The token in double opt-in email has limited acceptance time.
+Create transactional email(s) to send when token expires with `xTokenRefreshUrl` vairable.
 
 ### Including form
 

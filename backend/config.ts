@@ -63,7 +63,7 @@ export interface ServerConfiguration {
    */
   jwtSecret: string;
 
-  /** @brief How long token in email confirmation link is valid.
+  /** @brief How long token in email confirmation link is valid in seconds since token is created.
    * @details After this time another confirmation email will be sent when needed. (env:JWT_EXPIRATION)
    * @see https://github.com/vercel/ms#readme for time delta syntax.
    */
@@ -295,7 +295,7 @@ function parseJwtExpiration(value?: string): number {
   if (typeof parsed !== 'number' || Number.isNaN(parsed)) {
     throw new Error(`JWT_EXPIRATION must be a valid time delta: ${value}`);
   }
-  return parsed;
+  return Math.round(parsed / 1000);
 }
 
 function parseEnvironment(value?: string): Environment {
@@ -342,7 +342,7 @@ HCAPTCHA_SITE_KEY=${config.captcha.siteKey}
 HCAPTCHA_SECRET=${config.captcha.secret}`;
       break;
   }
-  
+
   return `
 # Company information for email templates
 COMPANY_NAME=${config.company.name}

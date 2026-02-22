@@ -26,6 +26,10 @@ export interface Contact {
    * The URL of the page from which the subscription request was made.
    */
   referer?: string;
+  /**
+   * The contact's preferred language ISO 639-1 code (e.g. "en", "pl").
+   */
+  language?: string;
 }
 
 type MailingLists = Record<string, boolean>;
@@ -50,11 +54,11 @@ export class Loops {
 
   /**
    * Initialize Loops — create custom properties.
-   * 
+   *
    * @details Creates the following properties:
    * - language - the contact's preferred language ISO 639-1 code (e.g. "en", "pl")
    * - xOptInStatus - the contact's double opt-in status ("pending", "accepted", "rejected")
-   * 
+   *
    * @see README.md for details
    * @see https://loops.so/docs/contacts/properties
    * @see https://loops.so/docs/api-reference/create-contact-property
@@ -113,10 +117,10 @@ export class Loops {
     }
 
     if (doubleOptInEmails === 0) {
-      errors.push("No double opt-in email configured");
+      errors.push("No double opt-in email configured. Define transactional email with `xOptInUrl` data variable.");
     }
     if (tokenRefreshEmails === 0) {
-      errors.push("No token refresh email configured");
+      errors.push("No token refresh email configured. Define transactional email with `xTokenRefreshUrl` data variable.");
     }
     if (errors.length > 0) {
       throw new Error(`Loops configuration verification failed: ${errors.join(", ")}`);
@@ -232,7 +236,7 @@ export class Loops {
     language?: string
   ): Promise<void> {
     const confirmationEmail =
-      await this.findDoubleOptInEmail(language);
+      await this.findTransactionalEmail((email) => email.dataVariables.includes("xOptInUrl"), language);
     console.log(
       `Sending ${confirmationEmail.name} to ${email} with ${confirmUrl}`
     );
@@ -243,36 +247,64 @@ export class Loops {
       email: email,
       transactionalId: confirmationEmail.id,
       dataVariables: {
-        companyName: this.company.name ?? "",
-        companyAddress: this.company.address ?? "",
+        companyName: this.company.name,
+        companyAddress: this.company.address,
         companyLogo: this.company.logo ?? "",
         xOptInUrl: confirmUrl.toString(),
       },
     });
   }
 
+  async sendTokenRefreshMail(
+    email: string,
+    refreshUrl: URL,
+    language?: string
+  ): Promise<void> {
+    const tokenRefreshEmail = await this.findTransactionalEmail((email) => email.dataVariables.includes("xTokenRefreshUrl"), language);
+    console.log(
+      `Sending ${tokenRefreshEmail.name} to ${email} with ${refreshUrl}`
+    );
+    await this.client.sendTransactionalEmail({
+      email: email,
+      transactionalId: tokenRefreshEmail.id,
+      dataVariables: {
+        companyName: this.company.name,
+        companyAddress: this.company.address,
+        companyLogo: this.company.logo ?? "",
+        xTokenRefreshUrl: refreshUrl.toString(),
+      },
+    });
+  }
+
   /**
-   * Find the transactional email used to confirm subscription.
+   * @brief Find the transactional email used to confirm subscription.
+   *
    * The double opt-in email should have `xOptInUrl` in its data variables
    * and language code in its name e.g. `#PL` if email is in polish.
+   * The token refresh email should have `xTokenRefreshUrl` in its data variables.
+   *
+   * @param predicate Predicate to filter transactional emails
    * @param language  Preferred language
    * @returns transactional email object
    */
-  private async findDoubleOptInEmail(language?: string) {
+  private async findTransactionalEmail(predicate: (email: TransactionalEmail) => boolean, language?: string) {
     const transactionalEmails = await this.fetchTransactionalEmails();
-    const doubleOptInEmails = transactionalEmails.filter((email) =>
-      email.dataVariables.includes("xOptInUrl")
-    );
-    if (doubleOptInEmails.length === 0)
-      throw new Error("No confirmation email configured");
+    const filtered = transactionalEmails.filter(predicate);
+    if (filtered.length === 0)
+      throw new Error("No transactional email configured");
 
     if (language) {
-      const translated = doubleOptInEmails.filter((email) =>
+      const translatedVersion = filtered.find((email) =>
         email.name.includes(`#${language.toUpperCase()}`)
       );
-      if (translated.length > 0) return translated[0];
+      if (translatedVersion !== undefined)
+        return translatedVersion;
     }
-    return doubleOptInEmails[0];
+    const englishVersion = filtered.find((email) => email.name.includes("#EN"));
+    if (englishVersion !== undefined)
+      return englishVersion;
+
+    return filtered[0];
   }
 }
 

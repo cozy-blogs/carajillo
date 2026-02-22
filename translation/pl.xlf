@@ -50,14 +50,6 @@
   <source>Missing authorization token</source>
   <target>Brakujący token uwierzytelniania</target>
 </trans-unit>
-<trans-unit id="s3a6bb4620999bfb8">
-  <source>Failed to fetch company information</source>
-  <target>Nie udało się pobrać informacji o firmie</target>
-</trans-unit>
-<trans-unit id="s107978f7bff1adb4">
-  <source>Failed to fetch subscription status</source>
-  <target>Nie udało się pobrać statusu subskrypcji</target>
-</trans-unit>
 <trans-unit id="s82500864dfbb1759">
   <source>Subscription not found</source>
   <target>Subskrypcja nie została znaleziona</target>
@@ -93,6 +85,22 @@
 <trans-unit id="h8def9fabfe37530f">
   <source>This site is protected by hCaptcha and its <x id="0" equiv-text="&lt;a href=&quot;https://hcaptcha.com/privacy&quot; target=&quot;_blank&quot;&gt;"/>Privacy Policy<x id="1" equiv-text="&lt;/a&gt;"/> and <x id="2" equiv-text="&lt;a href=&quot;https://hcaptcha.com/terms&quot; target=&quot;_blank&quot;&gt;"/>Terms of Service<x id="3" equiv-text="&lt;/a&gt;"/> apply.</source>
   <target>Ta strona jest chroniona przez hCaptcha. <x id="0" equiv-text="&lt;a href=&quot;https://hcaptcha.com/privacy&quot; target=&quot;_blank&quot;&gt;"/>Polityka prywatności<x id="1" equiv-text="&lt;/a&gt;"/> i <x id="2" equiv-text="&lt;a href=&quot;https://hcaptcha.com/terms&quot; target=&quot;_blank&quot;&gt;"/>Regulamin<x id="3" equiv-text="&lt;/a&gt;"/> mają zastosowanie.</target>
+</trans-unit>
+<trans-unit id="s1a3aa207f74bde3e">
+  <source>Authorization token has expired</source>
+  <target>Token uwierzytelniania wygasł</target>
+</trans-unit>
+<trans-unit id="sd4efadb17bc17858">
+  <source>Invalid authorization token</source>
+  <target>Nieprawidłowy token uwierzytelniania</target>
+</trans-unit>
+<trans-unit id="sec7bd9671271d6da">
+  <source>Resend confirmation email with new token</source>
+  <target>Wyślij e-mail weryfikacyjny z nowym tokenem</target>
+</trans-unit>
+<trans-unit id="sab95dc2b9f52f12c">
+  <source>Fresh token has been sent to your email.</source>
+  <target>Nowy token został wysłany na skrzynkę e-mail.</target>
 </trans-unit>
 </body>
 </file>

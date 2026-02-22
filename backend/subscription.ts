@@ -1,8 +1,8 @@
-import { Request } from 'express';
+import { request, Request } from 'express';
 import { HttpError } from './error';
 import { verifyCaptcha } from './captcha';
 import { Loops } from './loops';
-import { createToken } from './jwt';
+import { authenticate, createToken } from './jwt';
 import type { Configuration } from './config';
 
 export type SubscribeRequest = {
@@ -143,6 +143,43 @@ export async function updateSubscription(config: Configuration, {email, subscrib
     await loops.unsubscribeContact(email);
   }
   return {success: true, email, subscribed: subscribe};
+}
+
+export interface RefreshUserTokenRequest {
+  email?: string;
+}
+
+export interface RefreshUserTokenResponse {
+  success: true;
+  email: string;
+}
+
+export async function refreshUserToken(config: Configuration, req: Request): Promise<RefreshUserTokenResponse> {
+  const rootUrl = getRootUrl(req);
+  const email = authenticate(config.server, req, {acceptExpired: true});
+  const request = req.body as RefreshUserTokenRequest;
+  console.info(`refreshUserToken: ${JSON.stringify(request)} from ${req.ip}`);
+  if (request.email !== undefined && request.email !== email) {
+    throw new HttpError({
+      statusCode: 403,
+      message: "Forbidden",
+      details: "Email address from request does not match JWT."
+    });
+  }
+  const loops = new Loops(config);
+  const contact = await loops.findContact(email);
+  if (contact === null) {
+    throw new HttpError({statusCode: 404, message: 'Contact not found'});
+  }
+  const token = createToken(config.server, contact.email, rootUrl);
+
+  const params = new URLSearchParams({token});
+  if (contact.language !== undefined) {
+    params.set('lang', contact.language)
+  }
+  await loops.sendTokenRefreshMail(contact.email, new URL(`/control-panel?${params}`, rootUrl), contact.language);
+
+  return {success: true, email: contact.email};
 }
 
 function getRootUrl(req: Request): URL {
