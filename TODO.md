@@ -15,7 +15,7 @@
 * [x] localization
 * [ ] token refresh
   - [ ] due to server secret rotation
-  - [ ] due to token expiration
+  - [x] due to token expiration
 * [x] rename backend subscribe -> subscription
 * [x] backend/honeypot: form action to catch spammers
 * [x] company info, logo
@@ -26,12 +26,12 @@
 * [x] automatic tests
 * [x] handle initial mailing list in form
 * [ ] update name in control panel
-* [ ] error handling - functions to create errors, http headers
+* [-] error handling - functions to create errors, http headers
 * [x] rename 'caffè corretto/carajillo'? move to github
 * [x] optimize assets (before: control-panel.js 492 KiB => 133 KiB)
 * [x] form detection (carajillo class)
 * [ ] secure custom properties
-* [ ] use https://expressjs.com/en/resources/middleware/morgan.html for logging requests
+* [x] use https://expressjs.com/en/resources/middleware/morgan.html for logging requests
 
 # external
 * [ ] honeypot service

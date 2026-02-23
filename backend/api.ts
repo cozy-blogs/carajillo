@@ -3,6 +3,7 @@ import express, { Router } from "express";
 
 // middleware
 import cors from "cors";
+import morgan from "morgan";
 import { middleware as errorMiddleware, HttpError } from "./error";
 import { middleware as openApiValidator } from "express-openapi-validator";
 import { openApiSpec } from "./openapi-spec";
@@ -57,6 +58,9 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+const logFormat = config.server.environment === 'development' ? 'dev' : 'combined';
+app.use(morgan(logFormat));
 
 // Parse strings as simple key-value pairs.
 app.set('query parser', 'simple');
