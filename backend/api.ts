@@ -132,7 +132,7 @@ router.post("/user/refresh", authenticateRateLimiter, async (req, res) => {
 });
 
 // CAPTCHA settings.
-// Those are prebuilt on Netlify and should not be serverd by function.
+// Those are prebuilt on Netlify and should not be served by function.
 // This is just a backup in case the app is served outside of Netlify.
 router.get("/captcha", async (req, res) => {
   res.json(captchaConfiguration(config.captcha));

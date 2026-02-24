@@ -4,18 +4,12 @@ Newsletter subscription management for [Loops](https://loops.so/).
 
 ## Features
 
-- Double opt-in subscription — a replacement for [Loops built-in mechanizm](https://loops.so/docs/contacts/double-opt-in)
+- Double opt-in subscription — a replacement for [Loops built-in mechanism](https://loops.so/docs/contacts/double-opt-in)
 - Panel for users to manage mailing list subscription
 - Localization support
 - reCAPTCHA v3 validation
 - CORS enabled
 - Deployable as Netlify functions
-
-## Roadmap
-
-- [x] [hCaptcha](https://www.hcaptcha.com/) support
-- [ ] Subscription token rotation/refresh
-- [x] Loops configuration verification
 
 ## Setup
 
@@ -65,13 +59,13 @@ Use the following data variables:
  - `companyLogo`.
 
 The token in double opt-in email has limited acceptance time.
-Create transactional email(s) to send when token expires with `xTokenRefreshUrl` vairable.
+Create transactional email(s) to send when token expires with `xTokenRefreshUrl` variable.
 
 ### Including form
 
 Create a form with class `carajillo`.
 The form action does not matter.
-You can point the action to any honeypot service to monitor spammers or leave it empty. 
+You can point the action to any honeypot service to monitor spammers or leave it empty.
 The only required field is `email`.
 You can use other fields to configure contact properties [the same way as in Loops](https://loops.so/docs/forms/custom-form#create-a-form).
 
@@ -99,7 +93,7 @@ Architecture Principles:
 
 ```mermaid
 ---
-title: Subscription sequence diagram 
+title: Subscription sequence diagram
 ---
 sequenceDiagram
   actor User
@@ -177,7 +171,7 @@ sequenceDiagram
 
 ```mermaid
 ---
-title: Control panel state diagram 
+title: Control panel state diagram
 ---
 stateDiagram-v2
   classdef stable font-weight: bold
