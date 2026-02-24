@@ -95,7 +95,7 @@ export interface CaptchaConfiguration {
   /** @brief CAPTCHA secret. (env:CAPTCHA_SECRET) */
   secret: string;
   /** @brief CAPTCHA score threshold.
-   * @details in range 0.0 (more leniant) to 1.0 (more restrictive)
+   * @details in range 0.0 (more lenient) to 1.0 (more restrictive)
    * (env:CAPTCHA_THRESHOLD) default: 0.5
    */
   threshold: number;
@@ -367,7 +367,7 @@ JWT_EXPIRATION=${ms.default(config.server.jwtExpiration, { long: true })}
 
 # CAPTCHA provider (none|recaptcha|hcaptcha)
 CAPTCHA_PROVIDER=${config.captcha.provider}
-# CAPTCHA score threshold in range 0.0 (more leniant) to 1.0 (more restrictive)
+# CAPTCHA score threshold in range 0.0 (more lenient) to 1.0 (more restrictive)
 # default: 0.5
 CAPTCHA_THRESHOLD=${config.captcha.threshold.toFixed(1)}
 

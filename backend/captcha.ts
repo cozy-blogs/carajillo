@@ -59,17 +59,17 @@ type HCaptchaErrorCode
 
 /**
  * Error codes returned by the CAPTCHA provider.
- * 
+ *
  * ReCAPTCHA or hCaptcha common error codes:
  * missing-input-secret     - The secret parameter is missing.
  * invalid-input-secret     - The secret parameter is invalid or malformed.
  * missing-input-response   - The response parameter is missing.
  * invalid-input-response   - The response parameter is invalid or malformed.
  * bad-request              - The request is invalid or malformed.
- * 
+ *
  * ReCAPTCHA specific error codes:
  * timeout-or-duplicate     - The response is no longer valid: either is too old or has been used previously.
- * 
+ *
  * hCaptcha specific error codes:
  * expired-input-response   - The response parameter (verification token) is expired. (120s default)
  * already-seen-response    - The response parameter (verification token) was already verified once.
@@ -136,10 +136,10 @@ export class CaptchaVerifier {
         details: 'CAPTCHA token is required',
       });
     }
-  
+
     const captcha = await this.sendVerificationRequest(token, remoteIp);
     console.info(`CAPTCHA (reCAPTCHA): score=${captcha.score} action=${captcha.action} challenge_ts=${captcha.challenge_ts} hostname=${captcha.hostname}`);
-  
+
     if (this.provider === 'recaptcha' && captcha.action !== action) {
       console.error(`CAPTCHA action does not match: expected=${action} actual=${captcha.action}`);
       throw new HttpError({
@@ -149,23 +149,23 @@ export class CaptchaVerifier {
         details: "CAPTCHA error: action-mismatch"
       });
     }
-  
-    // @todo verify hostname, with list of CORS hosts
-  
+
+    // @todo verify hostname, with request origin
+
     if (captcha.score !== undefined && captcha.score < this.configuration.threshold) {
       console.warn(`CAPTCHA score below threshold ${captcha.score}`);
       return false;
     }
-  
+
     return true;
   }
-  
+
   /**
    * Handle CAPTCHA error codes.
-   * 
+   *
    * @param provider CAPTCHA provider
    * @param errorCodes list of CAPTCHA error codes
-   * 
+   *
    */
   private handleErrorCodes(errorCodes: ErrorCode[]): never {
     console.error(`CAPTCHA error codes (${this.provider}): ${errorCodes.join(', ')}`);
@@ -207,7 +207,7 @@ export class CaptchaVerifier {
       });
     }
   }
-  
+
   /**
    * Calls CAPTCHA REST API for token site verification.
    * @param provider CAPTCHA provider
@@ -225,7 +225,7 @@ export class CaptchaVerifier {
         verifyUrl = `https://api.hcaptcha.com/siteverify`;
         break;
     }
-  
+
     const body = new URLSearchParams({
       secret: this.configuration.secret,
       response: token,
@@ -241,17 +241,17 @@ export class CaptchaVerifier {
       },
       body: body.toString(),
     });
-  
+
     if (!response.ok) {
       throw new Error(`CAPTCHA API returned status ${response.status}`);
     }
-  
+
     const data = (await response.json()) as CaptchaResponse;
 
     if (data['error-codes']) {
       this.handleErrorCodes(data['error-codes']);
     }
-  
+
     if (data.success) {
       return data;
     } else {

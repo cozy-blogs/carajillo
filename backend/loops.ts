@@ -57,7 +57,7 @@ export class Loops {
    *
    * @details Creates the following properties:
    * - language - the contact's preferred language ISO 639-1 code (e.g. "en", "pl")
-   * - xOptInStatus - the contact's double opt-in status ("pending", "accepted", "rejected")
+   * - xOptInStatus - the contact's double opt-in status ("pending", "accepted", "rejected", or null)
    *
    * @see README.md for details
    * @see https://loops.so/docs/contacts/properties
