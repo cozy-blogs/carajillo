@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.1.1] - 2026-02-25
+- publish using node 22
+
 ## [v1.1] - 2026-02-25
 - hCAPTCHA support
 - different captcha branding options
