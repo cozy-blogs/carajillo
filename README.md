@@ -72,8 +72,8 @@ You can use other fields to configure contact properties [the same way as in Loo
 Example:
 ```html
 <form class="carajillo" action="https://carajillo.example.com/api/honeypot">
-  <input type="text" name="firstName" placeholder="Name">
-  <input type="email" name="email" placeholder="Email" required>
+  <input type="text" name="firstName" placeholder="Name" autocomplete="name">
+  <input type="email" name="email" placeholder="Email" autocomplete="email" required>
   <input type="hidden" name="mailingLists" value="comma, delimited, mailingListIds">
   <input type="hidden" name="language" value="en">
   <input type="submit" value="Submit">
