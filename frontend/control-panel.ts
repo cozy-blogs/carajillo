@@ -111,7 +111,6 @@ export class ControlPanel extends LitElement {
     }
     .container {
       box-sizing: border-box;
-      height: 100vh;
       padding: 1rem;
       display: flex;
       flex-direction: column;
@@ -122,7 +121,6 @@ export class ControlPanel extends LitElement {
     @media (min-width: 600px) {
       .container {
         width: 500px;
-        height: fit-content;
         border: 1px solid var(--md-sys-color-outline-variant);
         border-radius: 1rem;
       }
